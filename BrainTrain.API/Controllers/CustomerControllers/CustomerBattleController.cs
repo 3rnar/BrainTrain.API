@@ -1,4 +1,6 @@
-﻿using BrainTrain.Core.Models;
+﻿using BrainTrain.API.Helpers;
+using BrainTrain.API.Hubs;
+using BrainTrain.Core.Models;
 using BrainTrain.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -83,7 +85,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                     await db.SaveChangesAsync();
                     transaction.Commit();
 
-                    BattleHub.NotifyFirstUser(firstUser.UserName, JsonConvert.SerializeObject(new CustomerShortInfoViewModel
+                    await BattleHub.NotifyFirstUser(firstUser.UserName, JsonConvert.SerializeObject(new CustomerShortInfoViewModel
                     {
                         UserId = secondUser.Id,
                         AvatarUrl = secondUser.AvatarUrl,
@@ -125,7 +127,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             db.BattleQueues.Add(newBq);
             await db.SaveChangesAsync();
 
-            BattleHub.NotifyFriendBattleOpponent(opponent.UserName, JsonConvert.SerializeObject(new CustomerShortInfoViewModel
+            await BattleHub.NotifyFriendBattleOpponent(opponent.UserName, JsonConvert.SerializeObject(new CustomerShortInfoViewModel
             {
                 UserId = requestor.Id,
                 AvatarUrl = requestor.AvatarUrl,
@@ -209,7 +211,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
             if (model.IsCorrect == true)
             {
-                CustomerLevelUpdateHandler.UpdateLevel(question.QuestionDifficulty.Value, userId);
+                new CustomerLevelUpdateHandler(db).UpdateLevel(question.QuestionDifficulty.Value, userId);
             }
 
 
@@ -224,7 +226,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             //}
             await db.SaveChangesAsync();
 
-            BattleHub.NotifyAboutAnswer(battleQueue.FirstUserId == userId ? battleQueue.SecondUser.UserName : battleQueue.FirstUser.UserName, model.IsCorrect == true ? question.QuestionDifficulty.Value : 0);
+            await BattleHub.NotifyAboutAnswer(battleQueue.FirstUserId == userId ? battleQueue.SecondUser.UserName : battleQueue.FirstUser.UserName, model.IsCorrect == true ? question.QuestionDifficulty.Value : 0);
 
             var sqlUserId = new SqlParameter("@UserId", userId);
             var Questions = new SqlParameter("@Questions", model.QuestionId.ToString());

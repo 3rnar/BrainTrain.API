@@ -1,27 +1,22 @@
-﻿using BrainTrain.API.Helpers;
-using BrainTrain.API.Hubs;
-using BrainTrain.API.Models;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using Newtonsoft.Json;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Events")]
+    [Route("api/Customer/Events")]
     public class CustomerEventController : BaseApiController
     {
+        public CustomerEventController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("Delivered")]
-        public async Task<IHttpActionResult> Delivered(int eventId)
+        public async Task<IActionResult> Delivered(int eventId)
         {
             var e = await db.Events.FirstOrDefaultAsync(ev => ev.Id == eventId);
             e.DateSent = DateTime.Now;

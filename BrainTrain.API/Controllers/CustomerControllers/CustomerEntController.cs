@@ -1,22 +1,24 @@
 ﻿using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.API.Models;
 using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Ent")]
+    [Route("api/Customer/Ent")]
     public class CustomerEntController : BaseApiController
     {
+        public CustomerEntController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("Years")]
         public async Task<IEnumerable<CustomerEntYearViewModel>> GetYears(int subjectId)
@@ -25,7 +27,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 Where(y => y.EntVariants.Any(v => v.SubjectId == subjectId)).
                 Select(y => new CustomerEntYearViewModel { Id = y.Id, Title = y.Title }).ToList();
 
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var usersToEntVariants = await db.UsersToEntVariants.Include(utv => utv.EntVariant).
                 Where(utv => utv.UserId == userId && utv.EntVariant.SubjectId == subjectId).ToListAsync();
 
@@ -59,7 +61,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         public async Task<IEnumerable<CustomerEntVariantViewModel>> GetVariantsByYear(int yearId, int subjectId)
         {
             var model = new List<CustomerEntVariantViewModel>();
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var usersToEntVariants = await db.UsersToEntVariants.Include(utv => utv.EntVariant).
                 Where(utv => utv.UserId == userId && utv.EntVariant.SubjectId == subjectId).ToListAsync();
             var variants = await db.EntVariants.Include(ev => ev.EntVariantsToQuestions).
@@ -88,7 +90,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         public async Task<CustomerLearnosityEntQuestionViewModel> QuestionsByVariant(int variantId, bool isReview = false)
         {
             var model = new CustomerLearnosityEntQuestionViewModel { QuestionAnswers = new List<CustomerEntQuestionAnswerViewModel>() };
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var questionIds = await db.EntVariantsToQuestions.
                 Where(ev => ev.EntVariantId == variantId).
                 OrderBy(ev => ev.Question.QuestionDifficultyId).
@@ -182,7 +184,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("PostEntAnswers")]
         public async Task<IEnumerable<Theme>> PostEntAnswers(List<QuestionAnswer> model, int variantId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var dt = DateTime.Now;
             var notLearnedThemes = new List<Theme>();
 
@@ -262,7 +264,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ThemesWithGapsByVariantId")]
         public async Task<IEnumerable<Theme>> ThemesWithGapsByVariantId(int variantId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var notLearnedThemes = new List<Theme>();
 
             var variant = await db.EntVariants.Include(e => e.EntVariantsToQuestions).FirstOrDefaultAsync(e => e.Id == variantId);
@@ -292,7 +294,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("EntVariantStats")]
         public async Task<CheckingTestStatsViewModel> EntVariantStats(int variantId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var model = new CheckingTestStatsViewModel();
 
             var usersToEntVariants = await db.UsersToEntVariants.
