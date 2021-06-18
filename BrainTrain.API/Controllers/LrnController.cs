@@ -1,23 +1,21 @@
-﻿using BrainTrain.API.Models.LrnViewModels;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels.LrnViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Web;
-using System.Web.Http;
 
 namespace BrainTrain.API.Controllers
 {
     [AllowAnonymous]
-    public class LrnController : ApiController
+    public class LrnController : BaseApiController
     {
+        public LrnController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpPost]
         [Route("api/consumersettings")]
-        public IHttpActionResult GetConsumerSettings(ConsumerSettingsViewModel model)
+        public IActionResult GetConsumerSettings(ConsumerSettingsViewModel model)
         {
             var str = @"{
                 ""meta"": {
@@ -52,7 +50,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("latest/questions/list/name")]
-        public IHttpActionResult ListName()
+        public IActionResult ListName()
         {
             var json = File.ReadAllText(HttpContext.Current.Server.MapPath(@"~/App_Data/listName.js"));
 
@@ -63,7 +61,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("latest/questions/templates/editorV3")]
-        public IHttpActionResult TemplatesEditor()
+        public IActionResult TemplatesEditor()
         {
             var json = File.ReadAllText(HttpContext.Current.Server.MapPath(@"~/App_Data/templatesEditor.txt"));
 
@@ -74,7 +72,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("latest/questions/responses/editorV3")]
-        public IHttpActionResult ResponsesEditor()
+        public IActionResult ResponsesEditor()
         {
             var json = File.ReadAllText(HttpContext.Current.Server.MapPath(@"~/App_Data/responsesEditor.txt"));
 
@@ -85,7 +83,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("latest/questions/features/editorV3")]
-        public IHttpActionResult FeaturesEditorV3()
+        public IActionResult FeaturesEditorV3()
         {
             var json = File.ReadAllText(HttpContext.Current.Server.MapPath(@"~/App_Data/featuresEditor.txt"));
 

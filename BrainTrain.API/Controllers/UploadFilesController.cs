@@ -1,32 +1,30 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.API.Models;
-using BrainTrain.Core.Models;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.Azure;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
     public class UploadFilesController : BaseApiController
     {
+        private readonly IWebHostEnvironment environment;
+
+        public UploadFilesController(BrainTrainContext _db, IWebHostEnvironment environment) : base(_db)
+        {
+            this.environment = environment;
+        }
+
         // GET: api/UploadFiles
         [HttpGet]
         [Route("api/UploadFiles")]
@@ -47,7 +45,7 @@ namespace BrainTrain.API.Controllers
         //[ResponseType(typeof(UploadFile))]
         //[HttpGet]
         //[Route("api/UploadFiles/{id:Guid}")]
-        //public async Task<IHttpActionResult> GetUploadFile(Guid id)
+        //public async Task<IActionResult> GetUploadFile(Guid id)
         //{
         //    UploadFile uploadFile = await db.UploadFiles.FindAsync(id);
 
@@ -87,10 +85,9 @@ namespace BrainTrain.API.Controllers
 
         // GET: api/UploadFiles/5
         [AllowAnonymous]
-        [ResponseType(typeof(UploadFile))]
         [HttpGet]
         [Route("api/UploadFiles/{id:Guid}")]
-        public async Task<IHttpActionResult> GetUploadFile(Guid id)
+        public async Task<IActionResult> GetUploadFile(Guid id)
         {
             UploadFile uploadFile = await db.UploadFiles.FindAsync(id);
 
@@ -99,7 +96,7 @@ namespace BrainTrain.API.Controllers
                 return NotFound();
             }
 
-            var stream = new FileStream(HttpContext.Current.Server.MapPath(uploadFile.BlobUrl), FileMode.Open, FileAccess.Read);
+            var stream = new FileStream(Path.Combine(environment.WebRootPath, uploadFile.BlobUrl), FileMode.Open, FileAccess.Read);
             
             var result = new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -111,9 +108,8 @@ namespace BrainTrain.API.Controllers
             };
             result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
-            var response = ResponseMessage(result);
 
-            return response;
+            return Ok(result);
         }
 
         //// POST: api/UploadFiles   WITH AZURE BLOB
@@ -162,32 +158,34 @@ namespace BrainTrain.API.Controllers
         //}
 
         // POST: api/UploadFiles
-        [ResponseType(typeof(List<UploadFile>))]
         [HttpPost]
         [Route("api/UploadFiles", Name = "PostUploadFile")]
-        public async Task<HttpResponseMessage> PostUploadFile()
+        public async Task<IActionResult> PostUploadFile()
         {
-            if (!Request.Content.IsMimeMultipartContent())
-            {
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-            }
+            //if (!Request.Content.IsMimeMultipartContent())
+            //{
+            //    throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+            //}
             
             var uploadFiles = new List<UploadFile>();
-            var httpRequest = HttpContext.Current.Request;
+            var httpRequest = Request;
 
-            foreach (string file in httpRequest.Files)
+            foreach (var file in httpRequest.Form.Files)
             {
-                var postedFile = httpRequest.Files[file];
-                var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(postedFile.FileName);
+                
+                var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
 
-                var filePath = HttpContext.Current.Server.MapPath("~/App_Data/uploads/" + fileNameInFileSystem);
-                postedFile.SaveAs(filePath);
+                var filePath = Path.Combine(environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
 
                 var uploadFile = new UploadFile
                 {
                     BlobUrl = "~/App_Data/uploads/" + fileNameInFileSystem,
                     DateCreated = DateTime.Now,
-                    FileName = postedFile.FileName
+                    FileName = file.FileName
                 };
                 uploadFiles.Add(uploadFile);
             }
@@ -196,7 +194,7 @@ namespace BrainTrain.API.Controllers
             db.UploadFiles.AddRange(uploadFiles);
             await db.SaveChangesAsync();
 
-            return Request.CreateResponse(HttpStatusCode.OK, uploadFiles);
+            return  Ok(uploadFiles);
         }
 
         [AllowAnonymous]
@@ -204,27 +202,30 @@ namespace BrainTrain.API.Controllers
         [Route("api/UploadFiles/FroalaUpload")]
         public async Task<FroalaUploadFileViewModel> PostFroalaFile()
         {
-            if (!Request.Content.IsMimeMultipartContent())
-            {
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-            }
+            //if (!Request.Content.IsMimeMultipartContent())
+            //{
+            //    throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+            //}
 
             var uploadFiles = new List<UploadFile>();
-            var httpRequest = HttpContext.Current.Request;
+            var httpRequest = Request;
 
-            foreach (string file in httpRequest.Files)
+            foreach (var file in httpRequest.Form.Files)
             {
-                var postedFile = httpRequest.Files[file];
-                var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(postedFile.FileName);
 
-                var filePath = HttpContext.Current.Server.MapPath("~/App_Data/uploads/" + fileNameInFileSystem);
-                postedFile.SaveAs(filePath);
+                var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+
+                var filePath = Path.Combine(environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
 
                 var uploadFile = new UploadFile
                 {
                     BlobUrl = "~/App_Data/uploads/" + fileNameInFileSystem,
                     DateCreated = DateTime.Now,
-                    FileName = postedFile.FileName
+                    FileName = file.FileName
                 };
                 uploadFiles.Add(uploadFile);
             }
@@ -233,14 +234,13 @@ namespace BrainTrain.API.Controllers
             db.UploadFiles.AddRange(uploadFiles);
             await db.SaveChangesAsync();
 
-            return new FroalaUploadFileViewModel { link = HostName + "api/UploadFiles/" + uploadFiles[0].Id };
+            return new FroalaUploadFileViewModel { link = environment.ApplicationName  + "api/UploadFiles/" + uploadFiles[0].Id };
         }
 
         // DELETE: api/UploadFiles/5
-        [ResponseType(typeof(UploadFile))]
         [HttpDelete]
         [Route("api/UploadFiles/{id:Guid}")]
-        public async Task<IHttpActionResult> DeleteUploadFile(Guid id)
+        public async Task<IActionResult> DeleteUploadFile(Guid id)
         {
             UploadFile uploadFile = await db.UploadFiles.FindAsync(id);
             if (uploadFile == null)
@@ -252,15 +252,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(uploadFile);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool UploadFileExists(Guid id)

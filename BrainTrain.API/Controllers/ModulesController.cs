@@ -1,22 +1,20 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class ModulesController : ApiController
+    public class ModulesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public ModulesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Modules
         [HttpGet]
@@ -43,10 +41,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/Modules/5
-        [ResponseType(typeof(Module))]
         [HttpGet]
         [Route("api/Modules/{id:int}")]
-        public async Task<IHttpActionResult> GetModule(int id)
+        public async Task<IActionResult> GetModule(int id)
         {
             Module module = await db.Modules.Include(m => m.ThemesToModules).FirstOrDefaultAsync(m => m.Id == id);
             if (module == null)
@@ -58,10 +55,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Modules/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Modules/{id:int}")]
-        public async Task<IHttpActionResult> PutModule(int id, Module module)
+        public async Task<IActionResult> PutModule(int id, Module module)
         {
             if (!ModelState.IsValid)
             {
@@ -141,14 +137,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Modules
-        [ResponseType(typeof(Module))]
         [HttpPost]
         [Route("api/Modules", Name = "PostModule")]
-        public async Task<IHttpActionResult> PostModule(Module module)
+        public async Task<IActionResult> PostModule(Module module)
         {
             if (!ModelState.IsValid)
             {
@@ -192,10 +187,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Modules/5
-        [ResponseType(typeof(Module))]
         [HttpDelete]
         [Route("api/Modules/{id:int}")]
-        public async Task<IHttpActionResult> DeleteModule(int id)
+        public async Task<IActionResult> DeleteModule(int id)
         {
             Module module = await db.Modules.FindAsync(id);
             if (module == null)
@@ -209,14 +203,6 @@ namespace BrainTrain.API.Controllers
             return Ok(module);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         private bool ModuleExists(int id)
         {

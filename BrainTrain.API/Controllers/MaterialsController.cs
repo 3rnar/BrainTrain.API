@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using BrainTrain.API.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class MaterialsController : ApiController
+    public class MaterialsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public MaterialsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         //[HttpGet]
         //[Route("api/Materials/Count")]
@@ -126,8 +122,7 @@ namespace BrainTrain.API.Controllers
         // GET: api/Materials/5
         [HttpGet]
         [Route("api/Materials/{id:int}")]
-        [ResponseType(typeof(Material))]
-        public async Task<IHttpActionResult> GetMaterial(int id)
+        public async Task<IActionResult> GetMaterial(int id)
         {
             Material material = await db.Materials.Include(m => m.MaterialsToThemes).Include(m => m.KeywordsToMaterials).FirstOrDefaultAsync(m => m.Id == id);
 
@@ -140,10 +135,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Materials/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Materials/{id:int}")]
-        public async Task<IHttpActionResult> PutMaterial(int id, Material material)
+        public async Task<IActionResult> PutMaterial(int id, Material material)
         {
             //if (!ModelState.IsValid)
             //{
@@ -226,14 +220,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Materials
-        [ResponseType(typeof(Material))]
         [HttpPost]
         [Route("api/Materials", Name = "PostMaterial")]
-        public async Task<IHttpActionResult> PostMaterial(Material material)
+        public async Task<IActionResult> PostMaterial(Material material)
         {
             material.ContentManagerId = User.Identity.GetUserId();
 
@@ -251,10 +244,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Materials/5
-        [ResponseType(typeof(Material))]
         [HttpDelete]
         [Route("api/Materials/{id:int}")]
-        public async Task<IHttpActionResult> DeleteMaterial(int id)
+        public async Task<IActionResult> DeleteMaterial(int id)
         {
             Material material = await db.Materials.FindAsync(id);
             if (material == null)
@@ -269,16 +261,6 @@ namespace BrainTrain.API.Controllers
 
             return Ok(material);
         }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         private bool MaterialExists(int id)
         {
             return db.Materials.Count(e => e.Id == id) > 0;

@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class TrainingStatusesController : ApiController
+    public class TrainingStatusesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public TrainingStatusesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/TrainingStatuses
         [HttpGet]
@@ -27,10 +24,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/TrainingStatuses/5
-        [ResponseType(typeof(TrainingStatus))]
         [HttpGet]
         [Route("api/TrainingStatuses/{id:int}")]
-        public async Task<IHttpActionResult> GetTrainingStatus(int id)
+        public async Task<IActionResult> GetTrainingStatus(int id)
         {
             TrainingStatus trainingStatus = await db.TrainingStatus.FindAsync(id);
             if (trainingStatus == null)
@@ -42,10 +38,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/TrainingStatuses/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/TrainingStatuses/{id:int}")]
-        public async Task<IHttpActionResult> PutTrainingStatus(int id, TrainingStatus trainingStatus)
+        public async Task<IActionResult> PutTrainingStatus(int id, TrainingStatus trainingStatus)
         {
             if (!ModelState.IsValid)
             {
@@ -75,14 +70,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/TrainingStatuses
-        [ResponseType(typeof(TrainingStatus))]
         [HttpPost]
         [Route("api/TrainingStatuses", Name = "PostTrainingStatus")]
-        public async Task<IHttpActionResult> PostTrainingStatus(TrainingStatus trainingStatus)
+        public async Task<IActionResult> PostTrainingStatus(TrainingStatus trainingStatus)
         {
             if (!ModelState.IsValid)
             {
@@ -96,10 +90,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/TrainingStatuses/5
-        [ResponseType(typeof(TrainingStatus))]
         [HttpDelete]
         [Route("api/TrainingStatuses/{id:int}")]
-        public async Task<IHttpActionResult> DeleteTrainingStatus(int id)
+        public async Task<IActionResult> DeleteTrainingStatus(int id)
         {
             TrainingStatus trainingStatus = await db.TrainingStatus.FindAsync(id);
             if (trainingStatus == null)
@@ -111,15 +104,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(trainingStatus);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool TrainingStatusExists(int id)

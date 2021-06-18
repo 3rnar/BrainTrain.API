@@ -1,26 +1,25 @@
-﻿using System;
+﻿using BrainTrain.API.Helpers.Learnosity;
+using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using BrainTrain.API.Models;
-using BrainTrain.API.Helpers.Learnosity;
-using Newtonsoft.Json.Linq;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
-    public class QuestionsController : ApiController
+    public class QuestionsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public QuestionsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Questions
         [HttpGet]
@@ -94,7 +93,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("api/Questions/CheckQuestion/{id:int}")]
-        public IHttpActionResult CheckQuestion(int id)
+        public IActionResult CheckQuestion(int id)
         {
             var question = db.Questions.FirstOrDefault(q => q.Id == id);
             if (question != null)
@@ -111,10 +110,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/Questions/5
-        [ResponseType(typeof(Question))]
         [HttpGet]
         [Route("api/Questions/{id:int}")]
-        public async Task<IHttpActionResult> GetQuestion(int id)
+        public async Task<IActionResult> GetQuestion(int id)
         {
             Question question = await db.Questions.          
                 Include(q => q.QuestionType).
@@ -132,7 +130,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("api/Questions/Lrn/{id:int}")]
-        public async Task<IHttpActionResult> GetLRNQuestion(int id)
+        public async Task<IActionResult> GetLRNQuestion(int id)
         {
             var lRNQuestion = await db.Questions.Where(q => q.Id == id).ToListAsync();
 
@@ -144,10 +142,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Questions/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Questions/{id:int}")]
-        public async Task<IHttpActionResult> PutQuestion(int id, Question question)
+        public async Task<IActionResult> PutQuestion(int id, Question question)
         {
 
             if (id != question.Id)
@@ -158,7 +155,6 @@ namespace BrainTrain.API.Controllers
             var dbQuestion = await db.Questions.Include(q => q.QuestionsToThemes).Include(q => q.QuestionVariants).Include(q => q.Solutions).FirstOrDefaultAsync(q => q.Id == id);
             if (dbQuestion == null)
                 return BadRequest();
-            var userID = User.Identity.GetUserId();
 
             //THEMES
             if (dbQuestion.QuestionsToThemes.Count > 0)
@@ -194,7 +190,7 @@ namespace BrainTrain.API.Controllers
                 }
                 else
                 {
-                    db.Solutions.Add(new Solution { QuestionId = question.Id, Text = question.Solutions.FirstOrDefault().Text, ContentManagerId = userID });
+                    db.Solutions.Add(new Solution { QuestionId = question.Id, Text = question.Solutions.FirstOrDefault().Text, ContentManagerId = UserId });
                 }
             }
             else
@@ -292,12 +288,12 @@ namespace BrainTrain.API.Controllers
 
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         [HttpPost]
         [Route("api/Questions/PostLrn")]
-        public async Task<IHttpActionResult> PostLrn(LrnQuestionsEditViewModel model)
+        public async Task<IActionResult> PostLrn(LrnQuestionsEditViewModel model)
         {
             var question = db.Questions.FirstOrDefault(q => q.Id == model.Id);
             var qtts = db.QuestionsToThemes.Where(q => q.QuestionId == model.Id).ToList();
@@ -325,7 +321,7 @@ namespace BrainTrain.API.Controllers
 
             if (solution == null)
             {
-                db.Solutions.Add(new Solution { Text = model.Solution, ContentManagerId = User.Identity.GetUserId(), QuestionId = model.Id });
+                db.Solutions.Add(new Solution { Text = model.Solution, ContentManagerId = UserId, QuestionId = model.Id });
             }
             else
             {
@@ -357,24 +353,23 @@ namespace BrainTrain.API.Controllers
         }
 
         // POST: api/Questions
-        [ResponseType(typeof(Question))]
         [HttpPost]
         [Route("api/Questions", Name = "PostQuestion")]
-        public async Task<IHttpActionResult> PostQuestion(Question question)
+        public async Task<IActionResult> PostQuestion(Question question)
         {
             //if (!ModelState.IsValid)
             //{
                 //return BadRequest(ModelState);
             //}
 
-            question.ContentManagerId = User.Identity.GetUserId();
+            question.ContentManagerId = UserId;
             question.DateCreated = DateTime.Now;
 
             if (question.Solutions != null)
             {
                 foreach (var sol in question.Solutions)
                 {
-                    sol.ContentManagerId = User.Identity.GetUserId();
+                    sol.ContentManagerId = UserId;
                 }
             }
 
@@ -385,10 +380,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Questions/5
-        [ResponseType(typeof(Question))]
         [HttpDelete]
         [Route("api/Questions/{id:int}")]
-        public async Task<IHttpActionResult> DeleteQuestion(int id)
+        public async Task<IActionResult> DeleteQuestion(int id)
         {
             Question question = await db.Questions.Include(q => q.Solutions).Include(q => q.QuestionVariants).Include(q => q.QuestionsToThemes).FirstOrDefaultAsync(q => q.Id == id);
             if (question == null)
@@ -417,14 +411,6 @@ namespace BrainTrain.API.Controllers
             return Ok(question);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         private bool QuestionExists(int id)
         {

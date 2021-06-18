@@ -1,37 +1,29 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.Core.Models;
-using BrainTrain.API.Models;
-using Newtonsoft.Json.Linq;
-using System.Data.SqlClient;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class MidtermController : ApiController
+    public class MidtermController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public MidtermController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         [HttpGet]
         [Route("api/MidtermUserComplaints")]
-        public IHttpActionResult MidtermUserComplaints()
+        public IActionResult MidtermUserComplaints()
         {
             return Ok(db.Midterm_UserComplaints.ToList());
         }
 
         [HttpGet]
         [Route("api/MidtermEntrants")]
-        public IHttpActionResult MidtermEntrants(string search, int pageNum = 1, int perPage = 20)
+        public IActionResult MidtermEntrants(string search, int pageNum = 1, int perPage = 20)
         {
             var parameters = new List<SqlParameter>
             {
@@ -83,7 +75,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("api/MidtermEntrantsCount")]
-        public IHttpActionResult MidtermEntrantsCount()
+        public IActionResult MidtermEntrantsCount()
         {
             var count = db.Database.SqlQuery<int>($@"
                 SELECT COUNT(*)
