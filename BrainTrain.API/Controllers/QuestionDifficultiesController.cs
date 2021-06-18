@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
-    public class QuestionDifficultiesController : ApiController
+    public class QuestionDifficultiesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public QuestionDifficultiesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/QuestionDifficulties
         [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
@@ -28,10 +25,9 @@ namespace BrainTrain.API.Controllers
 
         // GET: api/QuestionDifficulties/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(QuestionDifficulty))]
         [HttpGet]
         [Route("api/QuestionDifficulties/{id:int}")]
-        public async Task<IHttpActionResult> GetQuestionDifficulty(int id)
+        public async Task<IActionResult> GetQuestionDifficulty(int id)
         {
             QuestionDifficulty questionDifficulty = await db.QuestionDifficulties.FindAsync(id);
             if (questionDifficulty == null)
@@ -44,10 +40,9 @@ namespace BrainTrain.API.Controllers
 
         // PUT: api/QuestionDifficulties/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/QuestionDifficulties/{id:int}")]
-        public async Task<IHttpActionResult> PutQuestionDifficulty(int id, QuestionDifficulty questionDifficulty)
+        public async Task<IActionResult> PutQuestionDifficulty(int id, QuestionDifficulty questionDifficulty)
         {
             if (!ModelState.IsValid)
             {
@@ -77,15 +72,14 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/QuestionDifficulties
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(QuestionDifficulty))]
         [HttpPost]
         [Route("api/QuestionDifficulties", Name = "PostQuestionDifficulty")]
-        public async Task<IHttpActionResult> PostQuestionDifficulty(QuestionDifficulty questionDifficulty)
+        public async Task<IActionResult> PostQuestionDifficulty(QuestionDifficulty questionDifficulty)
         {
             if (!ModelState.IsValid)
             {
@@ -100,10 +94,9 @@ namespace BrainTrain.API.Controllers
 
         // DELETE: api/QuestionDifficulties/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(QuestionDifficulty))]
         [HttpDelete]
         [Route("api/QuestionDifficulties/{id:int}")]
-        public async Task<IHttpActionResult> DeleteQuestionDifficulty(int id)
+        public async Task<IActionResult> DeleteQuestionDifficulty(int id)
         {
             QuestionDifficulty questionDifficulty = await db.QuestionDifficulties.FindAsync(id);
             if (questionDifficulty == null)
@@ -115,15 +108,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(questionDifficulty);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool QuestionDifficultyExists(int id)

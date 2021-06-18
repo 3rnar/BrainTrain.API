@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BrainTrain.Core.Models;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
-{    
-    public class QuestionTypesController : ApiController
+{
+    public class QuestionTypesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public QuestionTypesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/QuestionTypes
         [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
@@ -28,10 +25,9 @@ namespace BrainTrain.API.Controllers
 
         // GET: api/QuestionTypes/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(QuestionType))]
         [HttpGet]
         [Route("api/QuestionTypes/{id:int}")]
-        public async Task<IHttpActionResult> GetQuestionType(int id)
+        public async Task<IActionResult> GetQuestionType(int id)
         {
             QuestionType questionType = await db.QuestionTypes.FindAsync(id);
             if (questionType == null)
@@ -44,10 +40,9 @@ namespace BrainTrain.API.Controllers
 
         // PUT: api/QuestionTypes/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/QuestionTypes/{id:int}")]
-        public async Task<IHttpActionResult> PutQuestionType(int id, QuestionType questionType)
+        public async Task<IActionResult> PutQuestionType(int id, QuestionType questionType)
         {
             if (!ModelState.IsValid)
             {
@@ -77,15 +72,14 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/QuestionTypes
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(QuestionType))]
         [HttpPost]
         [Route("api/QuestionTypes", Name = "PostQuestionType")]
-        public async Task<IHttpActionResult> PostQuestionType(QuestionType questionType)
+        public async Task<IActionResult> PostQuestionType(QuestionType questionType)
         {
             if (!ModelState.IsValid)
             {
@@ -100,10 +94,9 @@ namespace BrainTrain.API.Controllers
 
         // DELETE: api/QuestionTypes/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(QuestionType))]
         [HttpDelete]
         [Route("api/QuestionTypes/{id:int}")]
-        public async Task<IHttpActionResult> DeleteQuestionType(int id)
+        public async Task<IActionResult> DeleteQuestionType(int id)
         {
             QuestionType questionType = await db.QuestionTypes.FindAsync(id);
             if (questionType == null)
@@ -115,15 +108,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(questionType);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool QuestionTypeExists(int id)

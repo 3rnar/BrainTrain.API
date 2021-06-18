@@ -1,23 +1,21 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
-using BrainTrain.API.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class ThemesTreesController : ApiController
+    public class ThemesTreesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public ThemesTreesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/ThemesTrees
         [HttpGet]
@@ -113,7 +111,7 @@ namespace BrainTrain.API.Controllers
         // POST: api/ThemesTrees
         [HttpPost]
         [Route("api/ThemesTrees", Name = "PostThemesTrees")]
-        public async Task<IHttpActionResult> PostThemesTrees(ThemesTrees[] themesTrees)
+        public async Task<IActionResult> PostThemesTrees(ThemesTrees[] themesTrees)
         {
             if (!ModelState.IsValid)
             {
@@ -139,10 +137,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/ThemesTrees/5
-        [ResponseType(typeof(ThemesTrees))]
         [HttpDelete]
         [Route("api/ThemesTrees")]
-        public async Task<IHttpActionResult> DeleteThemesTrees(int firstThemeId, int secondThemeId)
+        public async Task<IActionResult> DeleteThemesTrees(int firstThemeId, int secondThemeId)
         {
             ThemesTrees themesTrees = await db.ThemesTrees.FirstOrDefaultAsync(tt => tt.FirstThemeId == firstThemeId && tt.SecondThemeId == secondThemeId);
             if (themesTrees == null)
@@ -154,15 +151,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(themesTrees);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool ThemesTreesExists(int firstThemeId, int secondThemeId)

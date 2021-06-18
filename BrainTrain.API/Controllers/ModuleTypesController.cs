@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class ModuleTypesController : ApiController
+    public class ModuleTypesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public ModuleTypesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/ModuleTypes
         [HttpGet]
@@ -27,10 +23,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/ModuleTypes/5
-        [ResponseType(typeof(ModuleType))]
         [HttpGet]
         [Route("api/ModuleTypes/{id:int}")]
-        public async Task<IHttpActionResult> GetModuleType(int id)
+        public async Task<IActionResult> GetModuleType(int id)
         {
             ModuleType moduleType = await db.ModuleTypes.FindAsync(id);
             if (moduleType == null)
@@ -42,10 +37,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/ModuleTypes/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/ModuleTypes/{id:int}")]
-        public async Task<IHttpActionResult> PutModuleType(int id, ModuleType moduleType)
+        public async Task<IActionResult> PutModuleType(int id, ModuleType moduleType)
         {
             if (!ModelState.IsValid)
             {
@@ -75,14 +69,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/ModuleTypes
-        [ResponseType(typeof(ModuleType))]
         [HttpPost]
         [Route("api/ModuleTypes", Name = "PostModuleType")]
-        public async Task<IHttpActionResult> PostModuleType(ModuleType moduleType)
+        public async Task<IActionResult> PostModuleType(ModuleType moduleType)
         {
             if (!ModelState.IsValid)
             {
@@ -96,10 +89,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/ModuleTypes/5
-        [ResponseType(typeof(ModuleType))]
         [HttpDelete]
         [Route("api/ModuleTypes/{id:int}")]
-        public async Task<IHttpActionResult> DeleteModuleType(int id)
+        public async Task<IActionResult> DeleteModuleType(int id)
         {
             ModuleType moduleType = await db.ModuleTypes.FindAsync(id);
             if (moduleType == null)
@@ -113,14 +105,6 @@ namespace BrainTrain.API.Controllers
             return Ok(moduleType);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         private bool ModuleTypeExists(int id)
         {

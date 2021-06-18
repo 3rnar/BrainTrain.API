@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class NewsController : ApiController
+    public class NewsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public NewsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/News
         [HttpGet]
@@ -28,10 +24,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/News/5
-        [ResponseType(typeof(News))]
         [HttpGet]
         [Route("api/News/{id:int}")]
-        public async Task<IHttpActionResult> GetNews(int id)
+        public async Task<IActionResult> GetNews(int id)
         {
             News News = await db.News.FindAsync(id);
             if (News == null)
@@ -43,10 +38,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/News/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/News/{id:int}")]
-        public async Task<IHttpActionResult> PutNews(int id, [FromBody]News News)
+        public async Task<IActionResult> PutNews(int id, [FromBody]News News)
         {
             if (!ModelState.IsValid)
             {
@@ -76,15 +70,14 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/News
-        [ResponseType(typeof(News))]
         [HttpPost]
         [Route("api/News", Name = "PostNews")]
         [AcceptVerbs("POST")]
-        public async Task<IHttpActionResult> PostNews([FromBody]News News)
+        public async Task<IActionResult> PostNews([FromBody]News News)
         {
             var userId = User.Identity.GetUserId();
 
@@ -98,10 +91,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/News/5
-        [ResponseType(typeof(News))]
         [HttpDelete]
         [Route("api/News/{id:int}")]
-        public async Task<IHttpActionResult> DeleteNews(int id)
+        public async Task<IActionResult> DeleteNews(int id)
         {
             News News = await db.News.FindAsync(id);
             if (News == null)
@@ -113,15 +105,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(News);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool NewsExists(int id)

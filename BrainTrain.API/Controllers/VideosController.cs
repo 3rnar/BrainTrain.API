@@ -1,22 +1,19 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class VideosController : ApiController
+    public class VideosController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        private BrainTrainContext db;
 
         // GET: api/Videos
         [HttpGet]
@@ -27,10 +24,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/Videos/5
-        [ResponseType(typeof(Video))]
         [HttpGet]
         [Route("api/Videos/{id:int}")]
-        public async Task<IHttpActionResult> GetVideo(int id)
+        public async Task<IActionResult> GetVideo(int id)
         {
             Video video = await db.Videos.FindAsync(id);
             if (video == null)
@@ -42,10 +38,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Videos/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Videos/{id:int}")]
-        public async Task<IHttpActionResult> PutVideo(int id, Video video)
+        public async Task<IActionResult> PutVideo(int id, Video video)
         {
             if (!ModelState.IsValid)
             {
@@ -76,14 +71,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Videos
-        [ResponseType(typeof(Video))]
         [HttpPost]
         [Route("api/Videos", Name = "PostVideo")]
-        public async Task<IHttpActionResult> PostVideo(Video video, int materialId)
+        public async Task<IActionResult> PostVideo(Video video, int materialId)
         {
             //if (!ModelState.IsValid)
             //{
@@ -101,10 +95,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Videos/5
-        [ResponseType(typeof(Video))]
         [HttpDelete]
         [Route("api/Videos/{id:int}")]
-        public async Task<IHttpActionResult> DeleteVideo(int id)
+        public async Task<IActionResult> DeleteVideo(int id)
         {
             Video video = await db.Videos.FindAsync(id);
             if (video == null)
@@ -118,14 +111,6 @@ namespace BrainTrain.API.Controllers
             return Ok(video);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         private bool VideoExists(int id)
         {

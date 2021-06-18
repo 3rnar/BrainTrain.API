@@ -1,21 +1,20 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
-{    
-    public class ThemesController : ApiController
+{
+    public class ThemesController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public ThemesController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Themes
         [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
@@ -54,10 +53,9 @@ namespace BrainTrain.API.Controllers
 
         // GET: api/Themes/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(Theme))]
         [HttpGet]
         [Route("api/Themes/{id:int}")]
-        public async Task<IHttpActionResult> GetTheme(int id)
+        public async Task<IActionResult> GetTheme(int id)
         {
             Theme theme = await db.Themes.FindAsync(id);
             if (theme == null)
@@ -70,10 +68,9 @@ namespace BrainTrain.API.Controllers
 
         // PUT: api/Themes/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Themes/{id:int}")]
-        public async Task<IHttpActionResult> PutTheme(int id, [FromBody]Theme theme)
+        public async Task<IActionResult> PutTheme(int id, [FromBody]Theme theme)
         {
             if (!ModelState.IsValid)
             {
@@ -103,15 +100,14 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Themes
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(Theme))]
         [HttpPost]
         [Route("api/Themes", Name = "PostTheme")]
-        public async Task<IHttpActionResult> PostTheme(Theme theme)
+        public async Task<IActionResult> PostTheme(Theme theme)
         {
             if (!ModelState.IsValid)
             {
@@ -140,10 +136,9 @@ namespace BrainTrain.API.Controllers
 
         // DELETE: api/Themes/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(Theme))]
         [HttpDelete]
         [Route("api/Themes/{id:int}")]
-        public async Task<IHttpActionResult> DeleteTheme(int id)
+        public async Task<IActionResult> DeleteTheme(int id)
         {
             Theme theme = await db.Themes.FindAsync(id);
             if (theme == null)
@@ -155,15 +150,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(theme);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool ThemeExists(int id)

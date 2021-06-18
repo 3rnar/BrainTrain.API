@@ -1,23 +1,21 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.API.Models;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class Midterm_UserController : ApiController
+    public class Midterm_UserController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public Midterm_UserController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Midterm_User
         [Route("api/Midterm_User")]
@@ -29,7 +27,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("api/Midterm_User/Paging")]
-        public async Task<IHttpActionResult> GetMidterm_UsersPaging(int eventId, int languageId, int pageNum = 1, int perPage = 20)
+        public async Task<IActionResult> GetMidterm_UsersPaging(int eventId, int languageId, int pageNum = 1, int perPage = 20)
         {
             //if (search == null)
             //    search = "";
@@ -74,10 +72,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/Midterm_User/5
-        [ResponseType(typeof(Midterm_User))]
         [HttpGet]
         [Route("api/Midterm_User/{id:int}")]
-        public async Task<IHttpActionResult> GetMidterm_User(int id)
+        public async Task<IActionResult> GetMidterm_User(int id)
         {
             Midterm_User midterm_User = await db.Midterm_Users.FindAsync(id);
             if (midterm_User == null)
@@ -89,10 +86,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Midterm_User/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Midterm_User/{id:int}")]
-        public async Task<IHttpActionResult> PutMidterm_User(int id, Midterm_User midterm_User)
+        public async Task<IActionResult> PutMidterm_User(int id, Midterm_User midterm_User)
         {
             if (!ModelState.IsValid)
             {
@@ -122,14 +118,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Midterm_User
-        [ResponseType(typeof(Midterm_User))]
         [HttpPost]
         [Route("api/Midterm_User", Name = "PostMidterm_User")]
-        public async Task<IHttpActionResult> PostMidterm_User(Midterm_User midterm_User)
+        public async Task<IActionResult> PostMidterm_User(Midterm_User midterm_User)
         {
             if (!ModelState.IsValid)
             {
@@ -143,10 +138,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Midterm_User/5
-        [ResponseType(typeof(Midterm_User))]
         [HttpDelete]
         [Route("api/Midterm_User/{id:int}")]
-        public async Task<IHttpActionResult> DeleteMidterm_User(int id)
+        public async Task<IActionResult> DeleteMidterm_User(int id)
         {
             Midterm_User midterm_User = await db.Midterm_Users.FindAsync(id);
             if (midterm_User == null)
@@ -158,15 +152,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(midterm_User);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool Midterm_UserExists(int id)

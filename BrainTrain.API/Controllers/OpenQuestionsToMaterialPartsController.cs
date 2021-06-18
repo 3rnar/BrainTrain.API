@@ -1,22 +1,21 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class OpenQuestionsToMaterialPartsController : ApiController
+    public class OpenQuestionsToMaterialPartsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public OpenQuestionsToMaterialPartsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/OpenQuestionsToMaterialParts
         [HttpGet]
@@ -41,8 +40,7 @@ namespace BrainTrain.API.Controllers
         // GET: api/OpenQuestionsToMaterialParts/5
         [HttpGet]
         [Route("api/OpenQuestionsToMaterialParts/{id:int}")]
-        [ResponseType(typeof(OpenQuestionsToMaterialParts))]
-        public async Task<IHttpActionResult> GetOpenQuestionsToMaterialParts(int id)
+        public async Task<IActionResult> GetOpenQuestionsToMaterialParts(int id)
         {
             OpenQuestionsToMaterialParts openQuestionsToMaterialParts = await db.OpenQuestionsToMaterialParts.FindAsync(id);
             if (openQuestionsToMaterialParts == null)
@@ -56,8 +54,7 @@ namespace BrainTrain.API.Controllers
         // PUT: api/OpenQuestionsToMaterialParts/5
         [HttpPut]
         [Route("api/OpenQuestionsToMaterialParts/{id:int}")]
-        [ResponseType(typeof(void))]
-        public async Task<IHttpActionResult> PutOpenQuestionsToMaterialParts(int id, OpenQuestionsToMaterialParts openQuestionsToMaterialParts)
+        public async Task<IActionResult> PutOpenQuestionsToMaterialParts(int id, OpenQuestionsToMaterialParts openQuestionsToMaterialParts)
         {
             if (!ModelState.IsValid)
             {
@@ -87,14 +84,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/OpenQuestionsToMaterialParts
         [HttpPost]
         [Route("api/OpenQuestionsToMaterialParts", Name = "PostOpenQuestionsToMaterialParts")]
-        [ResponseType(typeof(OpenQuestionsToMaterialParts))]
-        public async Task<IHttpActionResult> PostOpenQuestionsToMaterialParts(OpenQuestionsToMaterialParts openQuestionsToMaterialParts)
+        public async Task<IActionResult> PostOpenQuestionsToMaterialParts(OpenQuestionsToMaterialParts openQuestionsToMaterialParts)
         {
             if (!ModelState.IsValid)
             {
@@ -118,8 +114,7 @@ namespace BrainTrain.API.Controllers
         // DELETE: api/OpenQuestionsToMaterialParts/5
         [HttpDelete]
         [Route("api/OpenQuestionsToMaterialParts/{id:int}")]
-        [ResponseType(typeof(OpenQuestionsToMaterialParts))]
-        public async Task<IHttpActionResult> DeleteOpenQuestionsToMaterialParts(int id)
+        public async Task<IActionResult> DeleteOpenQuestionsToMaterialParts(int id)
         {
             OpenQuestionsToMaterialParts openQuestionsToMaterialParts = await db.OpenQuestionsToMaterialParts.FindAsync(id);
             if (openQuestionsToMaterialParts == null)
@@ -131,15 +126,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(openQuestionsToMaterialParts);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool OpenQuestionsToMaterialPartsExists(int id)

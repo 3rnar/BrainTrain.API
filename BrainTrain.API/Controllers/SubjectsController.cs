@@ -1,31 +1,27 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNet.Identity;
-
 namespace BrainTrain.API.Controllers
-{    
+{
     public class SubjectsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public SubjectsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Subjects
         [Authorize(Roles = "Контент-менеджер")]
         [HttpGet]
         [Route("api/UserSubjects")]
-        public async Task<IHttpActionResult> GetUserSubjects()
+        public async Task<IActionResult> GetUserSubjects()
         {
-            ApplicationUser user = await UserManager.FindByIdAsync(UserId);
+            ApplicationUser user = await db.ApplicationUsers.FindAsync(UserId); 
 
             if (user == null)
             {
@@ -57,10 +53,9 @@ namespace BrainTrain.API.Controllers
 
         // GET: api/Subjects/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(Subject))]
         [HttpGet]
         [Route("api/Subjects/{id:int}")]
-        public async Task<IHttpActionResult> GetSubject(int id)
+        public async Task<IActionResult> GetSubject(int id)
         {
             Subject subject = await db.Subjects.FindAsync(id);
             if (subject == null)
@@ -73,10 +68,9 @@ namespace BrainTrain.API.Controllers
 
         // PUT: api/Subjects/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Subjects/{id:int}")]
-        public async Task<IHttpActionResult> PutSubject(int id, Subject subject)
+        public async Task<IActionResult> PutSubject(int id, Subject subject)
         {
             if (!ModelState.IsValid)
             {
@@ -130,15 +124,14 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Subjects
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(Subject))]
         [HttpPost]
         [Route("api/Subjects", Name = "PostSubject")]
-        public async Task<IHttpActionResult> PostSubject(Subject subject)
+        public async Task<IActionResult> PostSubject(Subject subject)
         {
             if (!ModelState.IsValid)
             {
@@ -153,10 +146,9 @@ namespace BrainTrain.API.Controllers
 
         // DELETE: api/Subjects/5
         [Authorize(Roles = "Контент-менеджер")]
-        [ResponseType(typeof(Subject))]
         [HttpDelete]
         [Route("api/Subjects/{id:int}")]
-        public async Task<IHttpActionResult> DeleteSubject(int id)
+        public async Task<IActionResult> DeleteSubject(int id)
         {
             Subject subject = await db.Subjects.FindAsync(id);
             if (subject == null)
@@ -168,15 +160,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(subject);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool SubjectExists(int id)

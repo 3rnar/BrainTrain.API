@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
-    public class QuestionVariantsController : ApiController
+    public class QuestionVariantsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public QuestionVariantsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/QuestionVariants
         [HttpGet]
@@ -28,9 +25,8 @@ namespace BrainTrain.API.Controllers
 
         // GET: api/QuestionVariants/5
         [HttpGet]
-        [ResponseType(typeof(QuestionVariant))]
         [Route("api/QuestionVariants/{id:int}")]
-        public async Task<IHttpActionResult> GetQuestionVariant(int id)
+        public async Task<IActionResult> GetQuestionVariant(int id)
         {
             QuestionVariant questionVariant = await db.QuestionVariants.FindAsync(id);
             if (questionVariant == null)
@@ -42,10 +38,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/QuestionVariants/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/QuestionVariants/{id:int}")]
-        public async Task<IHttpActionResult> PutQuestionVariant(int id, QuestionVariant questionVariant)
+        public async Task<IActionResult> PutQuestionVariant(int id, QuestionVariant questionVariant)
         {
             if (!ModelState.IsValid)
             {
@@ -75,14 +70,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/QuestionVariants
-        [ResponseType(typeof(QuestionVariant))]
         [HttpPost]
         [Route("api/QuestionVariants", Name = "PostQuestionVariant")]
-        public async Task<IHttpActionResult> PostQuestionVariant(QuestionVariant questionVariant)
+        public async Task<IActionResult> PostQuestionVariant(QuestionVariant questionVariant)
         {
             if (!ModelState.IsValid)
             {
@@ -96,10 +90,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/QuestionVariants/5
-        [ResponseType(typeof(QuestionVariant))]
         [HttpDelete]
         [Route("api/QuestionVariants/{id:int}")]
-        public async Task<IHttpActionResult> DeleteQuestionVariant(int id)
+        public async Task<IActionResult> DeleteQuestionVariant(int id)
         {
             QuestionVariant questionVariant = await db.QuestionVariants.FindAsync(id);
             if (questionVariant == null)
@@ -111,15 +104,6 @@ namespace BrainTrain.API.Controllers
             await db.SaveChangesAsync();
 
             return Ok(questionVariant);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private bool QuestionVariantExists(int id)

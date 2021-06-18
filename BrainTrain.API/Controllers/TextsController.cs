@@ -1,22 +1,21 @@
-﻿using System;
+﻿using BrainTrain.Core.Models;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class TextsController : ApiController
+    public class TextsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public TextsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Texts
         [HttpGet]
@@ -27,10 +26,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/Texts/5
-        [ResponseType(typeof(Text))]
         [HttpGet]
         [Route("api/Texts/{id:int}")]
-        public async Task<IHttpActionResult> GetText(int id)
+        public async Task<IActionResult> GetText(int id)
         {
             Text text = await db.Texts.FindAsync(id);
             if (text == null)
@@ -42,10 +40,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Texts/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Texts/{id:int}")]
-        public async Task<IHttpActionResult> PutText(int id, Text text)
+        public async Task<IActionResult> PutText(int id, Text text)
         {
             if (!ModelState.IsValid)
             {
@@ -77,14 +74,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/Texts
-        [ResponseType(typeof(Text))]
         [HttpPost]
         [Route("api/Texts", Name = "PostText")]
-        public async Task<IHttpActionResult> PostText(Text text, int materialId)
+        public async Task<IActionResult> PostText(Text text, int materialId)
         {
             //if (!ModelState.IsValid)
             //{
@@ -104,10 +100,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Texts/5
-        [ResponseType(typeof(Text))]
         [HttpDelete]
         [Route("api/Texts/{id:int}")]
-        public async Task<IHttpActionResult> DeleteText(int id)
+        public async Task<IActionResult> DeleteText(int id)
         {
             Text text = await db.Texts.FindAsync(id);
             if (text == null)
@@ -121,14 +116,6 @@ namespace BrainTrain.API.Controllers
             return Ok(text);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         private bool TextExists(int id)
         {
