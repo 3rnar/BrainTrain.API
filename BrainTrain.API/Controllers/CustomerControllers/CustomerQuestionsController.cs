@@ -374,7 +374,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         /// <returns></returns>
         [HttpPost]
         [Route("PostQuestionAnswers")]
-        public async Task<IHttpActionResult> PostQuestionAnswersAsync(QuestionAnswer model, int answerSourceId, double experience)
+        public async Task<IActionResult> PostQuestionAnswersAsync(QuestionAnswer model, int answerSourceId, double experience)
         {
             var userId = User.Identity.GetUserId();
             var dt = DateTime.Now;

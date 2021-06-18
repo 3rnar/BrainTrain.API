@@ -1,6 +1,9 @@
 ﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +34,7 @@ namespace BrainTrain.API.Controllers
                 new SqlParameter("@Take", perPage ),
                 new SqlParameter("@Search", string.IsNullOrEmpty(search) ? DBNull.Value : (object)search),
             };
-            var response = db.Database.SqlQuery<MidtermEntrantViewModel>($@"
+            var response = db.Set<MidtermEntrantViewModel>().FromSqlRaw($@"
                 SELECT [StudentID]
                       ,[EntryDate]
                       ,[LastName]
@@ -56,7 +59,7 @@ namespace BrainTrain.API.Controllers
             {
                 new SqlParameter("@Search", string.IsNullOrEmpty(search) ? DBNull.Value : (object)search ),
             };
-            var count = db.Database.SqlQuery<int>($@"
+            var count = db.Set<IntView>().FromSqlRaw($@"
                 SELECT COUNT(*)
                 FROM [192.168.12.104].[KazNITU].[dbo].[vw_emtihunter]
                 WHERE EntryDate IS NULL
@@ -77,7 +80,7 @@ namespace BrainTrain.API.Controllers
         [Route("api/MidtermEntrantsCount")]
         public IActionResult MidtermEntrantsCount()
         {
-            var count = db.Database.SqlQuery<int>($@"
+            var count = db.Set<IntView>().FromSqlRaw($@"
                 SELECT COUNT(*)
                 FROM [192.168.12.104].[KazNITU].[dbo].[vw_emtihunter]
                 WHERE EntryDate IS NULL").FirstOrDefault();

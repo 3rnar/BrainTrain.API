@@ -21,7 +21,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
     {
         [HttpGet]
         [Route("Delivered")]
-        public async Task<IHttpActionResult> Delivered(int eventId)
+        public async Task<IActionResult> Delivered(int eventId)
         {
             var e = await db.Events.FirstOrDefaultAsync(ev => ev.Id == eventId);
             e.DateSent = DateTime.Now;

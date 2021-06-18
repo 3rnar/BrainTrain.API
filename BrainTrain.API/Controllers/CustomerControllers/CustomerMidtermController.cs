@@ -21,21 +21,21 @@ namespace BrainTrain.API.Controllers.CustomerControllers
     {
         [HttpGet]
         [Route("GetTeachers")]
-        public async Task<IHttpActionResult> GetTeachers()
+        public async Task<IActionResult> GetTeachers()
         {
             return Ok(await db.Midterm_Teachers.OrderBy(t => t.Title).ToListAsync());
         }
 
         [HttpGet]
         [Route("GetLanguages")]
-        public async Task<IHttpActionResult> GetLanguages()
+        public async Task<IActionResult> GetLanguages()
         {
             return Ok(await db.Midterm_Languages.ToListAsync());
         }
 
         [HttpPost]
         [Route("PostNewUser")]
-        public async Task<IHttpActionResult> PostNewUser(Midterm_User user, int eventId)
+        public async Task<IActionResult> PostNewUser(Midterm_User user, int eventId)
         {
             var existingUser = await db.Midterm_Users.Include(u => u.Midterm_UserEvents).FirstOrDefaultAsync(u => u.SystemId == user.SystemId);
             if (existingUser != null)
@@ -196,7 +196,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("GetQuestions")]
-        public async Task<IHttpActionResult> GetQuestions(int userId, int eventId, int subjectId)
+        public async Task<IActionResult> GetQuestions(int userId, int eventId, int subjectId)
         {
             var list = new List<Midterm_Question>();
 
@@ -238,7 +238,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("PostUserAnswers")]
-        public async Task<IHttpActionResult> PostUserAnswers(List<CustomerMidtermQuestionAnswerViewModel> answers, int userId, int eventId, int subjectId)
+        public async Task<IActionResult> PostUserAnswers(List<CustomerMidtermQuestionAnswerViewModel> answers, int userId, int eventId, int subjectId)
         {
             var userEvent = await db.Midterm_UserEvents.
                 Include(a => a.Midterm_UserEventQuestions).
@@ -305,7 +305,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("GetUserAnswersReview")]
-        public async Task<IHttpActionResult> GetUserAnswersReview(int userId, int eventId)
+        public async Task<IActionResult> GetUserAnswersReview(int userId, int eventId)
         {
             var userEvent = await db.Midterm_UserEvents.
                 Include(a => a.Midterm_UserEventQuestions).
@@ -341,7 +341,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("GetAllUsersStats")]
-        public async Task<IHttpActionResult> GetAllUsersStats(int eventId, int languageId, DateTime? date = null)
+        public async Task<IActionResult> GetAllUsersStats(int eventId, int languageId, DateTime? date = null)
         {
             if (date == null)
             {
@@ -380,7 +380,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("RegisterComplaint")]
-        public async Task<IHttpActionResult> RegisterComplaint(int userId, int questionId, int eventId = 1)
+        public async Task<IActionResult> RegisterComplaint(int userId, int questionId, int eventId = 1)
         {
             var question = await db.Midterm_UserEventQuestions.Include(q => q.Midterm_UserEvent).FirstOrDefaultAsync(e => e.QuestionId == questionId && e.Midterm_UserEvent.UserId == userId && e.Midterm_UserEvent.EventId == eventId);
             if (question == null)
@@ -402,7 +402,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("AcceptComplaint")]
-        public async Task<IHttpActionResult> AcceptComplaint(int userId, int questionId, int eventId = 1)
+        public async Task<IActionResult> AcceptComplaint(int userId, int questionId, int eventId = 1)
         {
             var question = await db.Midterm_UserEventQuestions.Include(q => q.Midterm_UserEvent).FirstOrDefaultAsync(e => e.QuestionId == questionId && e.Midterm_UserEvent.UserId == userId && e.Midterm_UserEvent.EventId == eventId);
             if (question == null)
@@ -420,7 +420,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("DeclineComplaint")]
-        public async Task<IHttpActionResult> DeclineComplaint(int userId, int questionId, int eventId = 1)
+        public async Task<IActionResult> DeclineComplaint(int userId, int questionId, int eventId = 1)
         {
             var question = await db.Midterm_UserEventQuestions.Include(q => q.Midterm_UserEvent).FirstOrDefaultAsync(e => e.QuestionId == questionId && e.Midterm_UserEvent.UserId == userId && e.Midterm_UserEvent.EventId == eventId);
             if (question == null)
@@ -439,7 +439,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("GetAllQuestions")]
-        public async Task<IHttpActionResult> GetAllQuestions()
+        public async Task<IActionResult> GetAllQuestions()
         {
             var questions = await db.Midterm_Questions.OrderBy(q => q.VariantId).ThenBy(q => q.Order).ToListAsync();
 
@@ -451,7 +451,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("RegisterMidtermComplaint")]
-        public async Task<IHttpActionResult> RegisterMidtermComplaint(Midterm_UserComplaint complaint)
+        public async Task<IActionResult> RegisterMidtermComplaint(Midterm_UserComplaint complaint)
         {
             complaint.DateCreated = DateTime.Now;
             db.Midterm_UserComplaints.Add(complaint);

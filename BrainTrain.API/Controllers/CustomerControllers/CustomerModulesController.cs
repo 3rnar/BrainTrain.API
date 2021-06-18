@@ -69,7 +69,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("UpdateDeadlines")]
-        public async Task<IHttpActionResult> UpdateModuleDeadlines(int subjectId)
+        public async Task<IActionResult> UpdateModuleDeadlines(int subjectId)
         {
             var userId = User.Identity.GetUserId();
 
@@ -82,7 +82,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("AddUserModule")]
-        public async Task<IHttpActionResult> AddUserModule(int moduleId)
+        public async Task<IActionResult> AddUserModule(int moduleId)
         {
             var userId = User.Identity.GetUserId();
 
@@ -97,7 +97,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("PostCheckingTestAnswersSity")]
-        public async Task<IHttpActionResult> PostQuestionAnswersLearnosity(QuestionAnswer model, int themeId, int moduleId, int attemptId)
+        public async Task<IActionResult> PostQuestionAnswersLearnosity(QuestionAnswer model, int themeId, int moduleId, int attemptId)
         {
             var userId = User.Identity.GetUserId();
             var dt = DateTime.Now;
@@ -182,7 +182,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("PostControlWorkAnswers")]
-        public async Task<IHttpActionResult> PostControlWorkAnswers(QuestionAnswer model, int controlWorkId, double experience)
+        public async Task<IActionResult> PostControlWorkAnswers(QuestionAnswer model, int controlWorkId, double experience)
         {
             var userId = User.Identity.GetUserId();
             var dt = DateTime.Now;

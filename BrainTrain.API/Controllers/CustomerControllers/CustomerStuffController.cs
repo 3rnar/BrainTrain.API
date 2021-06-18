@@ -78,7 +78,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("AddComment")]
-        public async Task<IHttpActionResult> PostNewComment(CommentViewModel model)
+        public async Task<IActionResult> PostNewComment(CommentViewModel model)
         {
             var userId = User.Identity.GetUserId();
             var comment = new Comment { Text = model.Text, NewsId = model.NewsId, UserId = userId, DateCreated = DateTime.Now };
@@ -131,7 +131,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("PostCompliant")]
-        public IHttpActionResult PostCompliant(QuestionCompaint model)
+        public IActionResult PostCompliant(QuestionCompaint model)
         {
             var userId = User.Identity.GetUserId();
 
@@ -147,7 +147,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("LikeSource")]
-        public IHttpActionResult LikeSource(SourceUsefullnessViewModel model)
+        public IActionResult LikeSource(SourceUsefullnessViewModel model)
         {
             var userId = User.Identity.GetUserId();
             SourceUsefullness sourceUsefullness = new SourceUsefullness {
