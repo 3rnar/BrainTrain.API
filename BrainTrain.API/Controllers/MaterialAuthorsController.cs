@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
+﻿using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class MaterialAuthorsController : ApiController
+    public class MaterialAuthorsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public MaterialAuthorsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/MaterialAuthors
         [HttpGet]
@@ -29,8 +26,7 @@ namespace BrainTrain.API.Controllers
         // GET: api/MaterialAuthors/5
         [HttpGet]
         [Route("api/MaterialAuthors/{id:int}")]
-        [ResponseType(typeof(MaterialAuthor))]
-        public async Task<IHttpActionResult> GetMaterialAuthor(int id)
+        public async Task<IActionResult> GetMaterialAuthor(int id)
         {
             MaterialAuthor materialAuthor = await db.MaterialAuthors.FindAsync(id);
             if (materialAuthor == null)
@@ -42,10 +38,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/MaterialAuthors/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/MaterialAuthors/{id:int}")]
-        public async Task<IHttpActionResult> PutMaterialAuthor(int id, MaterialAuthor materialAuthor)
+        public async Task<IActionResult> PutMaterialAuthor(int id, MaterialAuthor materialAuthor)
         {
             if (!ModelState.IsValid)
             {
@@ -75,14 +70,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/MaterialAuthors
-        [ResponseType(typeof(MaterialAuthor))]
         [HttpPost]
         [Route("api/MaterialAuthors", Name = "PostMaterialAuthor")]
-        public async Task<IHttpActionResult> PostMaterialAuthor(MaterialAuthor materialAuthor)
+        public async Task<IActionResult> PostMaterialAuthor(MaterialAuthor materialAuthor)
         {
             if (!ModelState.IsValid)
             {
@@ -96,8 +90,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/MaterialAuthors/5
-        [ResponseType(typeof(MaterialAuthor))]
-        public async Task<IHttpActionResult> DeleteMaterialAuthor(int id)
+        [HttpDelete]
+        [Route("api/MaterialAuthors/{id:int}")]
+        public async Task<IActionResult> DeleteMaterialAuthor(int id)
         {
             MaterialAuthor materialAuthor = await db.MaterialAuthors.FindAsync(id);
             if (materialAuthor == null)
@@ -111,18 +106,9 @@ namespace BrainTrain.API.Controllers
             return Ok(materialAuthor);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         private bool MaterialAuthorExists(int id)
         {
-            return db.MaterialAuthors.Count(e => e.Id == id) > 0;
+            return db.MaterialAuthors.Any(e => e.Id == id);
         }
     }
 }

@@ -1,23 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BrainTrain.API.Helpers.Learnosity;
+using BrainTrain.Core.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.Core.Models;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
-    public class LRNQuestionsController : ApiController
+    public class LRNQuestionsController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public LRNQuestionsController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/LRNQuestions
         [HttpGet]
@@ -29,7 +28,7 @@ namespace BrainTrain.API.Controllers
 
         [HttpGet]
         [Route("api/LRNQuestions/Authoring")]
-        public async Task<IHttpActionResult> Authoring()
+        public async Task<IActionResult> Authoring()
         {
             var json = LRNAuthoringHelper.Simple("item_edit");
             return Ok(json);
@@ -39,8 +38,7 @@ namespace BrainTrain.API.Controllers
         // GET: api/LRNQuestions/5
         [HttpGet]
         [Route("api/LRNQuestions/{id:int}")]
-        [ResponseType(typeof(LRNQuestion))]
-        public async Task<IHttpActionResult> GetLRNQuestion(int id)
+        public async Task<IActionResult> GetLRNQuestion(int id)
         {
             var lRNQuestion = await db.LRNQuestions.Where(q => q.Id == id).ToListAsync();
 
@@ -54,8 +52,7 @@ namespace BrainTrain.API.Controllers
         // PUT: api/LRNQuestions/5
         [HttpPut]
         [Route("api/LRNQuestions/{id:int}")]
-        [ResponseType(typeof(void))]
-        public async Task<IHttpActionResult> PutLRNQuestion(int id, LRNQuestion lRNQuestion)
+        public async Task<IActionResult> PutLRNQuestion(int id, LRNQuestion lRNQuestion)
         {
             if (!ModelState.IsValid)
             {
@@ -85,14 +82,13 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         // POST: api/LRNQuestions
         [HttpPost]
         [Route("api/LRNQuestions", Name = "PostLRNQuestion")]
-        [ResponseType(typeof(LRNQuestion))]
-        public async Task<IHttpActionResult> PostLRNQuestion(LRNQuestion lRNQuestion)
+        public async Task<IActionResult> PostLRNQuestion(LRNQuestion lRNQuestion)
         {
             //if (!ModelState.IsValid)
             //{
@@ -110,8 +106,7 @@ namespace BrainTrain.API.Controllers
         // DELETE: api/LRNQuestions/5
         [HttpDelete]
         [Route("api/LRNQuestions/{id:int}")]
-        [ResponseType(typeof(LRNQuestion))]
-        public async Task<IHttpActionResult> DeleteLRNQuestion(int id)
+        public async Task<IActionResult> DeleteLRNQuestion(int id)
         {
             LRNQuestion lRNQuestion = await db.LRNQuestions.FindAsync(id);
             if (lRNQuestion == null)
@@ -125,18 +120,9 @@ namespace BrainTrain.API.Controllers
             return Ok(lRNQuestion);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         private bool LRNQuestionExists(int id)
         {
-            return db.LRNQuestions.Count(e => e.Id == id) > 0;
+            return db.LRNQuestions.Any(e => e.Id == id);
         }
     }
 }

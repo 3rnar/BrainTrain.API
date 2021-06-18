@@ -1,11 +1,4 @@
-﻿using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNet.Identity.Owin;
-using BrainTrain.Core.Models;
-
-namespace BrainTrain.Core.ViewModels
+﻿namespace BrainTrain.Core.ViewModels
 {
     // You can add profile data for the user by adding more properties to your ApplicationUser class, please visit http://go.microsoft.com/fwlink/?LinkID=317594 to learn more.
     //public class ApplicationUser : IdentityUser
@@ -25,7 +18,7 @@ namespace BrainTrain.Core.ViewModels
     //        : base("braintrainContext", throwIfV1Schema: false)
     //    {
     //    }
-        
+
     //    public static BrainTrainContext Create()
     //    {
     //        return new BrainTrainContext();

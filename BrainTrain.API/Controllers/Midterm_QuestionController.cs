@@ -1,25 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BrainTrain.API.Helpers.Learnosity;
+using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.Core.Models;
-using BrainTrain.API.Models;
-using Newtonsoft.Json.Linq;
 
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
-    public class Midterm_QuestionController : ApiController
+    public class Midterm_QuestionController : BaseApiController
     {
-        private BrainTrainContext db = new BrainTrainContext();
+        public Midterm_QuestionController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         [HttpGet]
         [Route("api/Midterm_Event")]
@@ -58,10 +56,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // GET: api/Midterm_Question/5
-        [ResponseType(typeof(Midterm_Question))]
         [HttpGet]
         [Route("api/Midterm_Question/{id:int}")]
-        public async Task<IHttpActionResult> GetMidterm_Question(int id)
+        public async Task<IActionResult> GetMidterm_Question(int id)
         {
             var midterm_Question = await db.Midterm_Questions.Where(q => q.Id == id).ToListAsync();
 
@@ -73,10 +70,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // PUT: api/Midterm_Question/5
-        [ResponseType(typeof(void))]
         [HttpPut]
         [Route("api/Midterm_Question/{id:int}")]
-        public async Task<IHttpActionResult> PutMidterm_Question(int id, Midterm_Question midterm_Question)
+        public async Task<IActionResult> PutMidterm_Question(int id, Midterm_Question midterm_Question)
         {
             if (!ModelState.IsValid)
             {
@@ -106,12 +102,12 @@ namespace BrainTrain.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         [HttpPost]
         [Route("api/Midterm_Question/PostLrn")]
-        public async Task<IHttpActionResult> PostLrn(LrnMidtermQuestionsEditViewModel model)
+        public async Task<IActionResult> PostLrn(LrnMidtermQuestionsEditViewModel model)
         {
             var question = db.Midterm_Questions.FirstOrDefault(q => q.Id == model.Id);
             if (question == null)
@@ -138,10 +134,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // POST: api/Midterm_Question
-        [ResponseType(typeof(Midterm_Question))]
         [HttpPost]
         [Route("api/Midterm_Question", Name = "PostMidterm_Question")]
-        public async Task<IHttpActionResult> PostMidterm_Question(Midterm_Question midterm_Question)
+        public async Task<IActionResult> PostMidterm_Question(Midterm_Question midterm_Question)
         {
             if (!ModelState.IsValid)
             {
@@ -155,10 +150,9 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/Midterm_Question/5
-        [ResponseType(typeof(Midterm_Question))]
         [HttpDelete]
         [Route("api/Midterm_Question/{id:int}")]
-        public async Task<IHttpActionResult> DeleteMidterm_Question(int id)
+        public async Task<IActionResult> DeleteMidterm_Question(int id)
         {
             Midterm_Question midterm_Question = await db.Midterm_Questions.FindAsync(id);
             if (midterm_Question == null)
@@ -172,18 +166,10 @@ namespace BrainTrain.API.Controllers
             return Ok(midterm_Question);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         private bool Midterm_QuestionExists(int id)
         {
-            return db.Midterm_Questions.Count(e => e.Id == id) > 0;
+            return db.Midterm_Questions.Any(e => e.Id == id);
         }
     }
 }
