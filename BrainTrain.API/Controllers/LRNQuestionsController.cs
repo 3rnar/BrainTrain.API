@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace BrainTrain.API.Controllers
@@ -121,7 +122,7 @@ namespace BrainTrain.API.Controllers
 
         private bool LRNQuestionExists(int id)
         {
-            return db.LRNQuestions.Count(e => e.Id == id) > 0;
+            return db.LRNQuestions.Any(e => e.Id == id);
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace BrainTrain.API.Controllers
@@ -228,15 +229,13 @@ namespace BrainTrain.API.Controllers
         [Route("api/Materials", Name = "PostMaterial")]
         public async Task<IActionResult> PostMaterial(Material material)
         {
-            material.ContentManagerId = User.Identity.GetUserId();
+            material.ContentManagerId = UserId;
 
             //if (!ModelState.IsValid)
             //{
             //    return BadRequest(ModelState);
             //}
-
-            
-
+          
             db.Materials.Add(material);
             await db.SaveChangesAsync();
 
@@ -261,9 +260,10 @@ namespace BrainTrain.API.Controllers
 
             return Ok(material);
         }
+
         private bool MaterialExists(int id)
         {
-            return db.Materials.Count(e => e.Id == id) > 0;
+            return db.Materials.Any(e => e.Id == id);
         }
     }
 }

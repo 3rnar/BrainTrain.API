@@ -7,13 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+
 namespace BrainTrain.API.Controllers
 {
     [Authorize(Roles = "Контент-менеджер")]
     public class Midterm_QuestionController : BaseApiController
     {
-
         public Midterm_QuestionController(BrainTrainContext _db) : base(_db)
         {
         }
@@ -164,9 +165,11 @@ namespace BrainTrain.API.Controllers
 
             return Ok(midterm_Question);
         }
+
+
         private bool Midterm_QuestionExists(int id)
         {
-            return db.Midterm_Questions.Count(e => e.Id == id) > 0;
+            return db.Midterm_Questions.Any(e => e.Id == id);
         }
     }
 }

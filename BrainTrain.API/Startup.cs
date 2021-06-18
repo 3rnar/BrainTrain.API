@@ -1,3 +1,5 @@
+using BrainTrain.API.Extensions;
+using BrainTrain.API.Hubs;
 using BrainTrain.Core.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,10 +32,10 @@ namespace BrainTrain.API
         {
             services.AddDbContext<BrainTrainContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Default")));
             services.AddControllers();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "BrainTrain.API", Version = "v1" });
-            });
+
+            services.AddSignalR();
+
+            services.AddSwagger();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -42,8 +44,7 @@ namespace BrainTrain.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BrainTrain.API v1"));
+                app.UseSwagger(env.EnvironmentName);
             }
 
             app.UseHttpsRedirection();
@@ -52,9 +53,13 @@ namespace BrainTrain.API
 
             app.UseAuthorization();
 
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<BattleHub>("/BattleHub");
+                endpoints.MapHub<ExamHub>("/ExamHub");
+                endpoints.MapHub<EventHub>("/EventHub");
             });
         }
     }

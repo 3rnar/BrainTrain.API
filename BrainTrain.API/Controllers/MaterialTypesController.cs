@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace BrainTrain.API.Controllers
@@ -89,6 +90,8 @@ namespace BrainTrain.API.Controllers
         }
 
         // DELETE: api/MaterialTypes/5
+        [HttpDelete]
+        [Route("api/MaterialTypes/{id:int}")]
         public async Task<IActionResult> DeleteMaterialType(int id)
         {
             MaterialType materialType = await db.MaterialTypes.FindAsync(id);
@@ -105,7 +108,7 @@ namespace BrainTrain.API.Controllers
 
         private bool MaterialTypeExists(int id)
         {
-            return db.MaterialTypes.Count(e => e.Id == id) > 0;
+            return db.MaterialTypes.Any(e => e.Id == id);
         }
     }
 }
