@@ -1,24 +1,23 @@
 ﻿using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.API.Models;
 using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Core.Objects;
-using System.Data.Entity.Infrastructure;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
-    [RoutePrefix("api/Customer/Midterm")]
+    [Route("api/Customer/Midterm")]
     public class CustomerMidtermController : BaseApiController
     {
+        public CustomerMidtermController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("GetTeachers")]
         public async Task<IActionResult> GetTeachers()

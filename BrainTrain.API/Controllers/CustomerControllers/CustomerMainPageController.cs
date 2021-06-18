@@ -1,25 +1,26 @@
 ﻿using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Data.Entity;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/MainPage")]
+    [Route("api/Customer/MainPage")]
     public class CustomerMainPageController : BaseApiController
     {
+        public CustomerMainPageController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("CustomerSubjects")]
         public async Task<IEnumerable<Subject>> CustomerSubjects()
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var subjects = await db.Subjects.Where(s => s.UsersToSubjects.Any(uts => uts.UserId == userId)).ToListAsync();
             return subjects;
         }

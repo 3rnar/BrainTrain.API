@@ -53,7 +53,6 @@ namespace BrainTrain.API
 
             app.UseAuthorization();
 
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

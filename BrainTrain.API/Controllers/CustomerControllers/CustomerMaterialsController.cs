@@ -1,21 +1,22 @@
-﻿using BrainTrain.API.Models;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using System;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Materials")]
+    [Route("api/Customer/Materials")]
     //jhh
     public class CustomerMaterialsController : BaseApiController
     {
+        public CustomerMaterialsController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("ThemeMaterials")]
         public IEnumerable<ThemeMaterialViewModel> ThemeMaterials(int themeId)

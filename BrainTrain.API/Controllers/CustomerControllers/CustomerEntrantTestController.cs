@@ -1,29 +1,30 @@
-﻿using System;
+﻿using BrainTrain.API.Helpers;
+using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Data.Entity;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.API.Models;
-using System.Data.SqlClient;
-using BrainTrain.API.Helpers;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/EntrantTest")]
+    [Route("api/Customer/EntrantTest")]
     public class CustomerEntrantTestController : BaseApiController
     {
+        public CustomerEntrantTestController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("EntrantTestQuestions")]
         public async Task<List<CustomerEntrantTestQuestionViewModel>> EntrantTestQuestions(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var userToSubj = await db.UsersToSubjects.Include(UsersToSubjects => UsersToSubjects.Subject).FirstOrDefaultAsync(uts => uts.UserId == userId && uts.SubjectId == subjectId);
             if (userToSubj == null)
                 throw new Exception("Subject not found");
@@ -53,7 +54,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("PostAnswers")]
         public async Task<IActionResult> PostEntrantTestAnswers(QuestionAnswer model, int subjectId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var dt = DateTime.Now;
             var checkingTestQuestions = await db.EntrantTestQuestions.Where(etq => etq.SubjectId == subjectId).Select(etq => etq.QuestionId).ToListAsync();
 
@@ -178,7 +179,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             var SubjectId = new SqlParameter("@SubjectId", subjectId);
             var ModulesToSkip = new SqlParameter("@ModulesToSkip", string.Join("|", modulesToSkip.Where(m => m != currentModule).ToList()));
 
-            db.Database.ExecuteSqlCommand("dbo.InsertUsersToQuickModules @SubjectId, @UserId, @ModulesToSkip", SubjectId, UserId, ModulesToSkip);
+            db.Database.ExecuteSqlRaw("dbo.InsertUsersToQuickModules @SubjectId, @UserId, @ModulesToSkip", SubjectId, UserId, ModulesToSkip);
 
             var userModules = await db.UsersToModules.Where(utm => utm.UserId == userId).ToListAsync();
             var cwCounter = 0;
@@ -208,7 +209,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             }
 
 
-            CustomerLevelUpdateHandler.UpdateLevel(experience, userId);
+            new CustomerLevelUpdateHandler(db).UpdateLevel(experience, userId);
             //var ur = await db.UserRatings.FirstOrDefaultAsync(ut => ut.UserId == userId);
             //if (ur == null)
             //{
