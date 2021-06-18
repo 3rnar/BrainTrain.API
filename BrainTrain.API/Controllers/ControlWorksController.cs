@@ -15,10 +15,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер")]
     public class ControlWorksController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public ControlWorksController(BrainTrainContext _db)
+        public ControlWorksController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/ControlWorks

@@ -13,10 +13,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
     public class EntYearsController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public EntYearsController(BrainTrainContext _db)
+        public EntYearsController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/EntYears

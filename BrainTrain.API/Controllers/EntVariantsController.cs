@@ -12,10 +12,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
     public class EntVariantsController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public EntVariantsController(BrainTrainContext _db)
+        public EntVariantsController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/EntVariants

@@ -20,10 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\CustomerControllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\BrainTrain.Core\BrainTrain.Core.csproj" />
   </ItemGroup>
 

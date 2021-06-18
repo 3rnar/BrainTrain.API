@@ -11,10 +11,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер")]
     public class KeywordsController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public KeywordsController(BrainTrainContext _db)
+        public KeywordsController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/Keywords

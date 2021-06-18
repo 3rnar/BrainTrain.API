@@ -15,11 +15,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер")]
     public class EntrantTestQuestionsController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-
-        public EntrantTestQuestionsController(BrainTrainContext _db)
+        public EntrantTestQuestionsController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/EntrantTestQuestions

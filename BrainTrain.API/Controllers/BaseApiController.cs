@@ -9,6 +9,11 @@ namespace BrainTrain.API.Controllers
 {
     public class BaseApiController : ControllerBase
     {
+        protected readonly BrainTrainContext db;
+        public BaseApiController(BrainTrainContext _db)
+        {
+            db = _db;
+        }
         // TODO: Implement memory or Asp.Net cache
         protected string UserId
         {

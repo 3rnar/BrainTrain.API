@@ -11,10 +11,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер")]
     public class GoalsController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public GoalsController(BrainTrainContext _db)
+        public GoalsController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/Goals

@@ -16,10 +16,8 @@ namespace BrainTrain.API.Controllers.CustomerControllers
     [Route("api/Customer/Battles")]
     public class CustomerBattleController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public CustomerBattleController(BrainTrainContext _db)
+        public CustomerBattleController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         [HttpGet]

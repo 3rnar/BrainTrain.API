@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BrainTrain.Models.Models;
 
 namespace BrainTrain.API.Controllers
 {
@@ -16,10 +15,8 @@ namespace BrainTrain.API.Controllers
     //[RoutePrefix("api/AdminDashboard")]
     public class AdminDashboardController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public AdminDashboardController(BrainTrainContext _db)
+        public AdminDashboardController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         [HttpGet]

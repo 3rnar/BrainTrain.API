@@ -13,10 +13,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
     public class FilesController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public FilesController(BrainTrainContext _db)
+        public FilesController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
 

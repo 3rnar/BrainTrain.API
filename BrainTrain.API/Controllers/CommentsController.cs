@@ -11,10 +11,8 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер")]
     public class CommentsController : BaseApiController
     {
-        private readonly BrainTrainContext db;
-        public CommentsController(BrainTrainContext _db)
+        public CommentsController(BrainTrainContext _db) : base(_db)
         {
-            db = _db;
         }
 
         // GET: api/Comments
