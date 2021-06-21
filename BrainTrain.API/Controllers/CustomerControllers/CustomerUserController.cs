@@ -1,30 +1,31 @@
-﻿using BrainTrain.API.Models;
-using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
+﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Http;
-using System.Web.Http.Description;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/User")]
+    [Route("api/Customer/User")]
     public class CustomerUserController : BaseApiController
     {
+        public CustomerUserController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("Coins")]
-        public async Task<IHttpActionResult> GetCoins()
+        public async Task<IActionResult> GetCoins()
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             var coins = await db.UserCoins.FirstOrDefaultAsync(uc => uc.UserId == UserId);
             if (coins == null){
@@ -39,11 +40,11 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("Experience")]
-        public async Task<IHttpActionResult> GetXP()
+        public IActionResult GetXP()
         {
-            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
-            var levels = await db.Levels.OrderBy(l => l.Id).ToListAsync();
-            var rating = await db.UserRatings.FirstOrDefaultAsync(uc => uc.UserId == UserId);
+            var user =  db.ApplicationUsers.Find(UserId);
+            var levels =  db.Levels.OrderBy(l => l.Id).ToList();
+            var rating =  db.UserRatings.FirstOrDefault(uc => uc.UserId == UserId);
 
             var currentLevel = levels.FirstOrDefault(l => l.Id == user.LevelId);
             var nextLevel = levels.FirstOrDefault(l => l.Id == (currentLevel?.Id + 1));
@@ -64,9 +65,9 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpGet]
         [Route("IsAdditionalInfoFilled")]
-        public async Task<IHttpActionResult> IsAdditionalInfoFilled(int subjectId)
+        public async Task<IActionResult> IsAdditionalInfoFilled(int subjectId)
         {
-            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+            var user = db.ApplicationUsers.Find(UserId);
 
             if (user == null)
                 return BadRequest();
@@ -103,7 +104,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("KnowledgeBorder")]
         public async Task<double> GetKnowledgeBorder(int subjectId)
         {
-            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+            var user = db.ApplicationUsers.Find(UserId);
 
             var uts = await db.UsersToSubjects.FirstOrDefaultAsync(u => u.UserId == user.Id && u.SubjectId == subjectId);
             if (uts == null)
@@ -118,25 +119,24 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("UserDesiredScore")]
         public async Task<double> GetUserDesiredScore()
         {
-            var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+            var user = db.ApplicationUsers.Find(UserId);
 
             return user.DesiredResult ?? 0;
         }
 
         [HttpPost]
         [Route("ChangeDesiredScore")]
-        public async Task<IHttpActionResult> ChangeDesiredScore(int desiredScore)
+        public IActionResult ChangeDesiredScore(int desiredScore)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = db.ApplicationUsers.Find(UserId);
             user.DesiredResult = desiredScore;
-            var entSubjectNumber = await db.Constants.FirstOrDefaultAsync(c => c.Id == 5);
+            var entSubjectNumber = db.Constants.FirstOrDefault(c => c.Id == 5);
 
-            var usersToSubjects = await db.UsersToSubjects.ToListAsync();
+            var usersToSubjects = db.UsersToSubjects.ToList();
             var desiredScoreBySubj = desiredScore / entSubjectNumber.NumericValue;
 
             foreach (var uts in usersToSubjects)
@@ -145,22 +145,20 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 uts.DesiredScore = Convert.ToInt32(desiredScoreBySubj);
             }
 
-            await UserManager.UpdateAsync(user);
-            await db.SaveChangesAsync();
+            db.SaveChangesAsync();
 
             return Ok();
         }
 
         [HttpPost]
         [Route("AddAdditionalInfo")]
-        public async Task<IHttpActionResult> AddAdditionalInfo(AdditionalInfoViewModel model)
+        public IActionResult AddAdditionalInfo(AdditionalInfoViewModel model)
         {            
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = db.ApplicationUsers.Find(UserId);
             if (user == null)
                 return BadRequest();
             
@@ -182,7 +180,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 user.LevelId = 1;
             }
 
-            var entSubjectNumber = await db.Constants.FirstOrDefaultAsync(c => c.Id == 5);
+            var entSubjectNumber = db.Constants.FirstOrDefault(c => c.Id == 5);
 
             int desiredScore = (int)(user.DesiredResult == null ? 25 : (user.DesiredResult / entSubjectNumber.NumericValue));
 
@@ -194,8 +192,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                     });
             }
 
-            await UserManager.UpdateAsync(user);
-            await db.SaveChangesAsync();
+            db.SaveChanges();
 
             return Ok();
         }
@@ -204,9 +201,8 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("UserPersonalInfo")]
         public async Task<CustomerPersonalInfoViewModel> GetUserPersonalInfo()
         {
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
-            var rating = await db.UserRatings.FirstOrDefaultAsync(ur => ur.UserId == userId);
+            var user = db.ApplicationUsers.Find(UserId);
+            var rating = await db.UserRatings.FirstOrDefaultAsync(ur => ur.UserId == UserId);
 
             var level = rating != null ? await db.Levels.FirstOrDefaultAsync(l => rating.Rating >= l.FromRating && rating.Rating < l.ToRating) : null;
 
@@ -215,12 +211,12 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 IsMale = user.IsMale,
-                PhoneNumber = user.PhoneNumber,
+                //PhoneNumber = user.PhoneNumber,
                 RegionId = user.RegionId,
                 SchoolId = user.SchoolId,
                 Email = user.Email,
                 GradeId = user.GradeId,
-                BirthDate = user.BirthDate,
+                //BirthDate = user.BirthDate,
                 AvatarUrl = user.AvatarUrl,
                 Experience = rating?.Rating,
                 RegionStr = user.RegionStr,
@@ -244,10 +240,10 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("UpdatePersonalInfo")]
-        public async Task<IHttpActionResult> UpdatePersonalInfo(CustomerPersonalInfoViewModel model)
+        public async Task<IActionResult> UpdatePersonalInfo(CustomerPersonalInfoViewModel model)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var userId = UserId;
+            var user = db.ApplicationUsers.Find(UserId);
 
             if (!string.IsNullOrEmpty( model.FirstName))
             {
@@ -255,7 +251,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             }
             if (!string.IsNullOrEmpty(model.UserName))
             {
-                if (db.Users.Any(u => u.UserName.Equals(model.UserName) && u.Id != userId))
+                if (db.ApplicationUsers.Any(u => u.UserName.Equals(model.UserName) && u.Id != userId))
                 {
                     return BadRequest("Ник уже используется другим пользователем");
                 }
@@ -265,10 +261,10 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             {
                 user.LastName = model.LastName;
             }
-            if (!string.IsNullOrEmpty(model.PhoneNumber))
-            {
-                user.PhoneNumber = model.PhoneNumber;
-            }
+            //if (!string.IsNullOrEmpty(model.PhoneNumber))
+            //{
+            //    user.PhoneNumber = model.PhoneNumber;
+            //}
             if (model.SchoolId != null)
             {
                 user.SchoolId = model.SchoolId.Value;
@@ -287,17 +283,17 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             }
             if (!string.IsNullOrEmpty(model.Email))
             {
-                if (db.Users.Any(u => u.Email.Equals(model.Email) && u.Id != userId))
+                if (db.ApplicationUsers.Any(u => u.Email.Equals(model.Email) && u.Id != userId))
                 {
                     return BadRequest("Email уже используется другим пользователем");
                 }
                 user.Email = model.Email;
             }
-            if (model.BirthDate != null)
-            {
-                user.BirthDate = model.BirthDate.Value;
-            }
-            await UserManager.UpdateAsync(user);
+            //if (model.BirthDate != null)
+            //{
+            //    user.BirthDate = model.BirthDate.Value;
+            //}
+            db.SaveChanges();
             return Ok();
         }
 
@@ -317,16 +313,15 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
         [HttpPost]
         [Route("AddUserSubject")]
-        public async Task<IHttpActionResult> AddUserSubject([FromUri]List<int> subjectIds)
+        public async Task<IActionResult> AddUserSubject([FromQuery]List<int> subjectIds)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = db.ApplicationUsers.Find(UserId);
 
-            var usersToSubject = await db.UsersToSubjects.Where(uts => uts.UserId == userId).ToListAsync();
+            var usersToSubject = await db.UsersToSubjects.Where(uts => uts.UserId == UserId).ToListAsync();
             var entDate = await db.Constants.FirstOrDefaultAsync(c => c.Id == 3);
             var daysBorder = await db.Constants.FirstOrDefaultAsync(c => c.Id == 2);
             var maxEntScore = await db.Constants.FirstOrDefaultAsync(c => c.Id == 4);
@@ -339,19 +334,19 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 var sDb = usersToSubject.FirstOrDefault(sts => sts.SubjectId == s);
                 if (sDb == null)
                 {
-                    db.UsersToSubjects.Add(new UsersToSubjects { SubjectId = s, UserId = userId, DesiredScore = desiredScore, DateCreated = DateTime.Now });
+                    db.UsersToSubjects.Add(new UsersToSubjects { SubjectId = s, UserId = UserId, DesiredScore = desiredScore, DateCreated = DateTime.Now });
 
-                    var UserId = new SqlParameter("@UserId", userId);
+                    var SqlUserId = new SqlParameter("@UserId", UserId);
                     var SubjectId = new SqlParameter("@SubjectId", s);
                     //укороченные или обычные модули
                     if ((entDate.DateValue.Value - DateTime.Now).Days <= daysBorder.NumericValue)
                     {
-                        db.Database.ExecuteSqlCommand("dbo.InsertUsersToQuickModules @SubjectId, @UserId", SubjectId, UserId);
+                        db.Database.ExecuteSqlRaw("dbo.InsertUsersToQuickModules @SubjectId, @UserId", SubjectId, SqlUserId);
 
                     }
                     else
                     {
-                        db.Database.ExecuteSqlCommand("dbo.InsertUsersToModules @SubjectId, @UserId", SubjectId, UserId);
+                        db.Database.ExecuteSqlRaw("dbo.InsertUsersToModules @SubjectId, @UserId", SubjectId, SqlUserId);
                     }
                 }
                 else
@@ -379,7 +374,9 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         {
             var regions = await db.Regions.ToListAsync();
             var schools = await db.Schools.ToListAsync();
-            var dbUsers = await db.Users.Include(u => u.UserRatings).Where(u => u.Roles.Any(r => r.RoleId == "4" || r.RoleId == "2" || r.RoleId == "1")  == false).OrderByDescending(u => u.UserRatings.Sum(ur => ur.Rating)).ToListAsync();
+            var dbUsers = await db.ApplicationUsers.Include(u => u.UserRatings).OrderByDescending(u => u.UserRatings.Sum(ur => ur.Rating)).ToListAsync();
+            //BUG WARNING
+            //.Where(u => u.Roles.Any(r => r.RoleId == "4" || r.RoleId == "2" || r.RoleId == "1")  == false)
             var users = new List<UserViewModel>();
             var levels = await db.Levels.ToListAsync();
 
@@ -420,7 +417,8 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         public async Task<SolvedQuestionsToAllQuestionsViewModel> GetSolvedQuestionsToAllQuestions()
         {
             var sq = new SolvedQuestionsToAllQuestionsViewModel();
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
+
 
             sq.NumberOfQuestions = await db.QuestionAnswers.Where(qa => qa.UserId == userId).CountAsync();
             sq.NumberOfSolvedQuestions = await db.QuestionAnswers.Where(qa => qa.UserId == UserId && (qa.Value.Trim().ToLower() == qa.Question.CorrectAnswerValue.Trim().ToLower() || qa.QuestionAnswerVariants.Any(qav => qav.QuestionVariant.IsCorrect == true))).CountAsync();
@@ -434,7 +432,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         public async Task<LearnedThemesToAllThemesViewModel> GetLearnedThemesToAllThemes(int subjectId)
         {
             var sq = new LearnedThemesToAllThemesViewModel();
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             sq.NumberOfThemes = await db.Themes.Where(qa => qa.SubjectId == subjectId).CountAsync();
             sq.NumberOfLearnedThemes = await db.UsersToThemes.Where(utt => utt.IsThemeLearned == true && utt.UserId == userId && utt.Theme.SubjectId == subjectId).CountAsync();
@@ -448,7 +446,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         public async Task<LearnedModulesToAllModulesViewModel> GetLearnedModulesToAllModules()
         {
             var sq = new LearnedModulesToAllModulesViewModel();
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             sq.NumberOfModules = await db.UsersToModules.Where(qa => qa.UserId == userId).CountAsync();
             sq.NumberOfLearnedModules = await db.UsersToModules.Where(utt => utt.FactLearnedDate != null).CountAsync();
@@ -461,53 +459,52 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("GetAvatar")]
         public async Task<string> GetAvatar()
         {
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = db.ApplicationUsers.Find(UserId);
 
             return user.AvatarUrl ?? "";
         }
-
-        [HttpPost]
-        [Route("UploadAvatar")]
-        public async Task<IHttpActionResult> UploadAvatar()
-        {
-            if (!Request.Content.IsMimeMultipartContent())
-            {
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-            }
-
-            var uploadFiles = new List<UploadFile>();
-            var httpRequest = HttpContext.Current.Request;
-
-            foreach (string file in httpRequest.Files)
-            {
-                var postedFile = httpRequest.Files[file];
-                var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(postedFile.FileName);
-
-                var filePath = HttpContext.Current.Server.MapPath("~/App_Data/uploads/" + fileNameInFileSystem);
-                postedFile.SaveAs(filePath);
-
-                var uploadFile = new UploadFile
-                {
-                    BlobUrl = "~/App_Data/uploads/" + fileNameInFileSystem,
-                    DateCreated = DateTime.Now,
-                    FileName = postedFile.FileName
-                };
-                uploadFiles.Add(uploadFile);
-            }
-
-            db.UploadFiles.AddRange(uploadFiles);
-            await db.SaveChangesAsync();
-
-            var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
-
-            if (uploadFiles.Count > 0)
-                user.AvatarUrl = "/api/UploadFiles/" + uploadFiles[0].Id;
-           await UserManager.UpdateAsync(user);
-
-           return Ok(user.AvatarUrl);
-        }
+        //BUG WARNING
+        //[HttpPost]
+        //[Route("UploadAvatar")]
+        //public async Task<IActionResult> UploadAvatar()
+        //{
+        //    if (!Request.Content.IsMimeMultipartContent())
+        //    {
+        //        throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+        //    }
+        //
+        //    var uploadFiles = new List<UploadFile>();
+        //    var httpRequest = HttpContext.Current.Request;
+        //
+        //    foreach (string file in httpRequest.Files)
+        //    {
+        //        var postedFile = httpRequest.Files[file];
+        //        var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(postedFile.FileName);
+        //
+        //        var filePath = HttpContext.Current.Server.MapPath("~/App_Data/uploads/" + fileNameInFileSystem);
+        //        postedFile.SaveAs(filePath);
+        //
+        //        var uploadFile = new UploadFile
+        //        {
+        //            BlobUrl = "~/App_Data/uploads/" + fileNameInFileSystem,
+        //            DateCreated = DateTime.Now,
+        //            FileName = postedFile.FileName
+        //        };
+        //        uploadFiles.Add(uploadFile);
+        //    }
+        //
+        //    db.UploadFiles.AddRange(uploadFiles);
+        //    await db.SaveChangesAsync();
+        //
+        //    var userId = User.Identity.GetUserId();
+        //    var user = await UserManager.FindByIdAsync(userId);
+        //
+        //    if (uploadFiles.Count > 0)
+        //        user.AvatarUrl = "/api/UploadFiles/" + uploadFiles[0].Id;
+        //   await UserManager.UpdateAsync(user);
+        //
+        //   return Ok(user.AvatarUrl);
+        //}
 
         [HttpGet]
         [Route("ConnectedUsers")]
@@ -520,8 +517,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("Grade")]
         public string GetUserGrade()
         {
-            var userId = User.Identity.GetUserId();
-            var user = UserManager.FindById(userId);
+            var user = db.ApplicationUsers.Find(UserId);
 
             if (user.GradeId == null)
                 return "Не заполнен";
@@ -535,7 +531,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ShortInfo")]
         public async Task<CustomerShortInfoViewModel> ShortInfo(string userId)
         {
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = db.ApplicationUsers.Find(UserId);
             var shortInfo = new CustomerShortInfoViewModel
             {
                 UserId = user.Id,
@@ -548,8 +544,8 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 Experience = 0,
                 RegionStr = user.RegionStr,
                 SchoolStr = user.SchoolStr,
-                Email = user.Email,
-                BirthDate = user.BirthDate
+                //BirthDate = user.BirthDate,
+                Email = user.Email
             };
 
             if (shortInfo.RegionId != null)
@@ -583,7 +579,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ShortStats")]
         public async Task<CustomerShortStatsViewModel> ShortStats(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             var stats = new CustomerShortStatsViewModel();
 

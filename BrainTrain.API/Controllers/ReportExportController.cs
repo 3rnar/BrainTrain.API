@@ -1,14 +1,4 @@
-using IEIT.Reports.WebFramework.Api.Resolvers;
-using System.IO;
-using System.Net.Http;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Hosting;
 
 namespace BrainTrain.API.Controllers
 {

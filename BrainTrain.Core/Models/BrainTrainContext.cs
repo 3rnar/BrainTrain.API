@@ -18,6 +18,9 @@ namespace BrainTrain.Core.Models
             }
 
             modelBuilder.Entity<AdminDashboardViewModel>().HasNoKey().ToView(null);
+            modelBuilder.Entity<MidtermEntrantViewModel>().HasNoKey().ToView(null);
+            modelBuilder.Entity<IntView>().HasNoKey().ToView(null);
+
 
             base.OnModelCreating(modelBuilder);
         }

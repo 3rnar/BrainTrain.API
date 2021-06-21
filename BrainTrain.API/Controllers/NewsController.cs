@@ -79,7 +79,7 @@ namespace BrainTrain.API.Controllers
         [AcceptVerbs("POST")]
         public async Task<IActionResult> PostNews([FromBody]News News)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             News.DateCreated = DateTime.Now;
             News.ContentManagerId = userId;
