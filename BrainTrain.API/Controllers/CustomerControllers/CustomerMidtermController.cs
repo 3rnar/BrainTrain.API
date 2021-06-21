@@ -93,7 +93,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 var parameters = new List<SqlParameter> {
                     new SqlParameter("@IIN", user.SystemId),
                 };
-                var response = db.Database.SqlQuery<string>($"select dbo.{functionName} (@IIN)", parameters.ToArray()).FirstOrDefault();
+                var response = "";//db.Database.SqlQuery<string>($"select dbo.{functionName} (@IIN)", parameters.ToArray()).FirstOrDefault();
 
                 if (string.IsNullOrEmpty(response))
                 {
@@ -102,12 +102,13 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
                 user.FullName = response;
             }
-            
+
 
             user.DateCreated = DateTime.Now;
-            
 
-            var midtermUserEvent = new Midterm_UserEvent {
+
+            var midtermUserEvent = new Midterm_UserEvent
+            {
                 Midterm_User = user,
                 EventId = eventId,
                 Midterm_UserEventQuestions = (await ChooseQuestionsAsync(eventId, user.LanguageId)).Select(l => new Midterm_UserEventQuestion
@@ -204,7 +205,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                 Include(a => a.Midterm_UserEventQuestions.Select(e => e.Midterm_Question)).
                 OrderByDescending(a => a.Id).
                 FirstOrDefaultAsync(a => a.UserId == userId && a.EventId == eventId);
-            
+
             if (userEvent == null)
             {
                 BadRequest("Необходимо повторно авторизоваться");
@@ -276,8 +277,8 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             {
                 userEvent.FinalResult = totalValue;
             }
-            
-            
+
+
             switch (eventId)
             {
                 case 1:
@@ -285,7 +286,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
                     {
                         userEvent.StatusId = 4;
                         userEvent.DateFinish = DateTime.Now;
-                    }                    
+                    }
                     break;
                 case 2:
                     userEvent.StatusId = 4;
@@ -346,7 +347,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             {
                 date = new DateTime(2020, 1, 1);
             }
-            var users = await db.Midterm_Users.                
+            var users = await db.Midterm_Users.
                 Include(u => u.Midterm_UserEvents).
                 Include(u => u.Midterm_UserEvents.Select(e => e.Midterm_UserEventQuestions)).
                 Include(u => u.Midterm_UserEvents.Select(e => e.Midterm_UserEventQuestions.Select(q => q.Midterm_Question))).

@@ -1,23 +1,26 @@
-﻿using BrainTrain.API.Models;
+﻿using BrainTrain.API.Dapper;
+using BrainTrain.API.Helpers;
 using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Data.Entity;
-using System.Data.SqlClient;
-using BrainTrain.API.Helpers;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Modules")]
+    [Route("api/Customer/Modules")]
     public class CustomerModulesController : BaseApiController
     {
+        private readonly IConfiguration Configuration;
+        public CustomerModulesController(BrainTrainContext _db, IConfiguration configuration) : base(_db)
+        {
+            Configuration = configuration;
+        }
+
         [HttpGet]
         [Route("UserModulesTiny")]
         public async Task<CustomerModulesAndControlWorksViewModel> GetModulesTiny(int subjectId)
@@ -177,6 +180,8 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             var Questions = new SqlParameter("@Questions", model.QuestionId.ToString());
             db.Database.ExecuteSqlCommand("dbo.UpdateThemeOverallLearningRate @Questions, @UserId", Questions, UserId2);
 
+
+            var sp = new StoredProcedure<SqlServer, UserCoins>("").Exec();
             return Ok(db.ModuleThemePassAttempts.FirstOrDefault(mtp => mtp.Id == attemptId).CurrentScore);
         }
 
