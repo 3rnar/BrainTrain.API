@@ -37,11 +37,13 @@ namespace BrainTrain.API
                 {
                     options.Authority = "https://localhost:5001";
 
+
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateAudience = false
                     };
                 });
+            services.AddCors();
 
             // adds an authorization policy to make sure the token is for scope 'api1'
             services.AddAuthorization(options =>
@@ -71,6 +73,10 @@ namespace BrainTrain.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseCors(builder =>
+            {
+                builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
