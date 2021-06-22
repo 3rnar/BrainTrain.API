@@ -18,11 +18,11 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер,Заполнение вопросов")]
     public class UploadFilesController : BaseApiController
     {
-        private readonly IWebHostEnvironment environment;
+        private readonly IWebHostEnvironment _environment;
 
         public UploadFilesController(BrainTrainContext _db, IWebHostEnvironment environment) : base(_db)
         {
-            this.environment = environment;
+            _environment = environment;
         }
 
         // GET: api/UploadFiles
@@ -96,7 +96,7 @@ namespace BrainTrain.API.Controllers
                 return NotFound();
             }
 
-            var stream = new FileStream(Path.Combine(environment.WebRootPath, uploadFile.BlobUrl), FileMode.Open, FileAccess.Read);
+            var stream = new FileStream(Path.Combine(_environment.WebRootPath, uploadFile.BlobUrl), FileMode.Open, FileAccess.Read);
             
             var result = new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -175,7 +175,7 @@ namespace BrainTrain.API.Controllers
                 
                 var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
 
-                var filePath = Path.Combine(environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
+                var filePath = Path.Combine(_environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
@@ -215,7 +215,7 @@ namespace BrainTrain.API.Controllers
 
                 var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
 
-                var filePath = Path.Combine(environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
+                var filePath = Path.Combine(_environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
@@ -234,7 +234,7 @@ namespace BrainTrain.API.Controllers
             db.UploadFiles.AddRange(uploadFiles);
             await db.SaveChangesAsync();
 
-            return new FroalaUploadFileViewModel { link = environment.ApplicationName  + "api/UploadFiles/" + uploadFiles[0].Id };
+            return new FroalaUploadFileViewModel { link = _environment.ApplicationName  + "api/UploadFiles/" + uploadFiles[0].Id };
         }
 
         // DELETE: api/UploadFiles/5

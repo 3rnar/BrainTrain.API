@@ -1,8 +1,10 @@
 ﻿using BrainTrain.API.Dapper;
 using BrainTrain.API.Helpers;
 using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -25,12 +27,10 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("UserModulesTiny")]
         public async Task<CustomerModulesAndControlWorksViewModel> GetModulesTiny(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
-
-            var UserId = new SqlParameter("@UserId", userId);
-            var SubjectId = new SqlParameter("@SubjectId", subjectId);
-
-            var modules = db.Database.SqlQuery<CustomerModulesTinyViewModel>("dbo.GetUserModulesTiny @UserId, @SubjectId", UserId, SubjectId).ToList();
+            var modules = new StoredProcedure<SqlServer, CustomerModulesTinyViewModel>("GetUserModulesTiny").ExecResult(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@SubjectId", subjectId)
+                );
 
 
             //var usersToControlWorks = db.UsersToControlWorks.Where(u => u.UserId == userId).ToList();
@@ -38,19 +38,19 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             double subjectKnowingBorder = ((double) userToSubject.DesiredScore / userToSubject.Subject.MaximumScore * 100) ?? 0;
 
             var controlWorks = db.ControlWorks.OrderBy(cw => cw.Id).Include(cw => cw.UsersToControlWorks).
-                Where(c => c.SubjectId == subjectId && c.UserId == userId).
+                Where(c => c.SubjectId == subjectId && c.UserId == UserId).
                 Select(c => new CustomerControlWorkViewModel {
                 ControlWorkId = c.Id,
                 ControlWorkTypeId = c.TypeId,
                 ControlWorkTitle = c.Title,
                 ModuleIds = c.ControlWorksToModules.Select(cw => cw.ModuleId).ToList(),
-                KnowingPercentage = c.UsersToControlWorks.Any(utc => utc.ControlWorkId == c.Id && utc.UserId == userId) ? 
-                    c.UsersToControlWorks.OrderByDescending(utc => utc.Id).FirstOrDefault(utc => utc.ControlWorkId == c.Id && utc.UserId == userId).CurrentLearningRate : 0,
-                IsAttemptCompleted = c.UsersToControlWorks.Any(utc => utc.ControlWorkId == c.Id && utc.UserId == userId) ?
-                    c.UsersToControlWorks.OrderByDescending(utc => utc.Id).FirstOrDefault(utc => utc.ControlWorkId == c.Id && utc.UserId == userId).IsCompleted : false,
-                BestResult = c.UsersToControlWorks.Any(utc => utc.ControlWorkId == c.Id && utc.UserId == userId) ?
-                    c.UsersToControlWorks.OrderByDescending(utc => utc.CurrentLearningRate).FirstOrDefault(utc => utc.ControlWorkId == c.Id && utc.UserId == userId).CurrentLearningRate : 0,
-                NumberOfAttempts = c.UsersToControlWorks.Count(utc => utc.ControlWorkId == c.Id && utc.UserId == userId)
+                KnowingPercentage = c.UsersToControlWorks.Any(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId) ? 
+                    c.UsersToControlWorks.OrderByDescending(utc => utc.Id).FirstOrDefault(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId).CurrentLearningRate : 0,
+                IsAttemptCompleted = c.UsersToControlWorks.Any(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId) ?
+                    c.UsersToControlWorks.OrderByDescending(utc => utc.Id).FirstOrDefault(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId).IsCompleted : false,
+                BestResult = c.UsersToControlWorks.Any(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId) ?
+                    c.UsersToControlWorks.OrderByDescending(utc => utc.CurrentLearningRate).FirstOrDefault(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId).CurrentLearningRate : 0,
+                NumberOfAttempts = c.UsersToControlWorks.Count(utc => utc.ControlWorkId == c.Id && utc.UserId == UserId)
             }).ToList();
 
             foreach (var cw in controlWorks)
@@ -74,11 +74,10 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("UpdateDeadlines")]
         public async Task<IActionResult> UpdateModuleDeadlines(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
-
-            var UserId = new SqlParameter("@UserId", userId);
-            var SubjectId = new SqlParameter("@SubjectId", subjectId);
-            db.Database.ExecuteSqlCommand("dbo.UpdateNotLearnedModuleDeadlines @SubjectId, @UserId", SubjectId, UserId);
+            new StoredProcedure<SqlServer, object>("UpdateNotLearnedModuleDeadlines").Exec(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@SubjectId", subjectId)
+                );
 
             return Ok();
         }
@@ -87,7 +86,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("AddUserModule")]
         public async Task<IActionResult> AddUserModule(int moduleId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             if (!await db.UsersToModules.AnyAsync(utm => utm.ModuleId == moduleId && utm.UserId == userId))
             {
@@ -102,7 +101,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("PostCheckingTestAnswersSity")]
         public async Task<IActionResult> PostQuestionAnswersLearnosity(QuestionAnswer model, int themeId, int moduleId, int attemptId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var dt = DateTime.Now;
 
             var attempt = await db.ModuleThemePassAttempts.
@@ -137,7 +136,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             if (model.IsCorrect == true)
             {
                 var dbQuestion = await db.Questions.Include(q => q.QuestionDifficulty).FirstOrDefaultAsync();
-                CustomerLevelUpdateHandler.UpdateLevel(dbQuestion.QuestionDifficulty.Value, userId);
+                new CustomerLevelUpdateHandler(db).UpdateLevel(dbQuestion.QuestionDifficulty.Value, userId);
             }
 
             if (model.QuestionAnswerVariants != null)
@@ -170,18 +169,17 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
             await db.SaveChangesAsync();
 
-            var UserId = new SqlParameter("@UserId", userId);
-            var ThemeId = new SqlParameter("@ThemeId", themeId);
-            var ModuleId = new SqlParameter("@ModuleId", moduleId);
-            var AttemptId = new SqlParameter("@AttemptId", attemptId);
-            db.Database.ExecuteSqlCommand("dbo.UpdateThemeAndModuleLearningRate @UserId, @ThemeId, @ModuleId, @AttemptId", UserId, ThemeId, ModuleId, AttemptId);
+            new StoredProcedure<SqlServer, object>("UpdateThemeAndModuleLearningRate").Exec(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@ThemeId", themeId),
+                new FunctionParameter("@ModuleId", moduleId),
+                new FunctionParameter("@AttemptId", attemptId)
+                );
 
-            var UserId2 = new SqlParameter("@UserId", userId);
-            var Questions = new SqlParameter("@Questions", model.QuestionId.ToString());
-            db.Database.ExecuteSqlCommand("dbo.UpdateThemeOverallLearningRate @Questions, @UserId", Questions, UserId2);
-
-
-            var sp = new StoredProcedure<SqlServer, UserCoins>("").Exec();
+            new StoredProcedure<SqlServer, object>("UpdateNotLearnedModuleDeadlines").Exec(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@Questions", model.QuestionId.ToString())
+                );
             return Ok(db.ModuleThemePassAttempts.FirstOrDefault(mtp => mtp.Id == attemptId).CurrentScore);
         }
 
@@ -189,7 +187,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("PostControlWorkAnswers")]
         public async Task<IActionResult> PostControlWorkAnswers(QuestionAnswer model, int controlWorkId, double experience)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var dt = DateTime.Now;
 
             var qa = new QuestionAnswer
@@ -216,7 +214,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
 
             if (model.IsCorrect != null && model.IsCorrect == true)
             {
-                CustomerLevelUpdateHandler.UpdateLevel(experience, userId);
+                new CustomerLevelUpdateHandler(db).UpdateLevel(experience, userId);
                 //var ur = await db.UserRatings.FirstOrDefaultAsync(u => u.UserId == userId);
                 //if (ur == null)
                 //{
@@ -344,7 +342,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ControlWorkStats")]
         public async Task<CheckingTestStatsViewModel> ControlWorkStats(int controlWorkId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var model = new CheckingTestStatsViewModel();
 
             var userToCw = db.UsersToControlWorks.

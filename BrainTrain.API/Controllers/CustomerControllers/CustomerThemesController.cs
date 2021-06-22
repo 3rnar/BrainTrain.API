@@ -1,33 +1,31 @@
-﻿using BrainTrain.API.Models;
+﻿using BrainTrain.API.Dapper;
 using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
-using System;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Themes")]
+    [Route("api/Customer/Themes")]
     public class CustomerThemesController : BaseApiController
     {
+        public CustomerThemesController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         [HttpGet]
         [Route("UserParentThemes")]
         public async Task<IEnumerable<CustomerParentThemesViewModel>> GetThemes(int subjectId, int? gradeId)
         {
-            var userId = User.Identity.GetUserId();
-
-            var UserId = new SqlParameter("@UserId", userId);
-            var SubjectId = new SqlParameter("@SubjectId", subjectId);
-            var GradeId = new SqlParameter("@GradeId", (object)gradeId ?? DBNull.Value);
-
-            var themes = db.Database.SqlQuery<CustomerParentThemesViewModel>("GetUserParentThemes @UserId, @GradeId, @SubjectId", UserId, GradeId, SubjectId).ToList();
-
+            var themes = new StoredProcedure<SqlServer, CustomerParentThemesViewModel>("GetUserParentThemes").ExecResult(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@GradeId", gradeId),
+                new FunctionParameter("@SubjectId", subjectId)
+                );
             return themes;
         }
 
@@ -64,7 +62,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("UserFactAndPlan")]
         public async Task<IEnumerable<CustomerPlanAndFactThemesViewModel>> GetFactAndPlanThemes(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             return db.UsersToThemes.Where(utt => utt.UserId == userId && utt.Theme.SubjectId == subjectId && utt.PredictedDeadLine != null)
                 .Select(utt => new CustomerPlanAndFactThemesViewModel
             {
@@ -97,13 +95,12 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("UserModuleThemes")]
         public async Task<IEnumerable<CustomerModuleThemeViewModel>> GetModuleThemes(int moduleId, int subjectId)
         {
-            var userId = User.Identity.GetUserId();
 
-            var UserId = new SqlParameter("@UserId", userId);
-            var ModuleId = new SqlParameter("@ModuleId", moduleId);
-            var SubjectId = new SqlParameter("@SubjectId", subjectId);
-
-            var themes = db.Database.SqlQuery<CustomerModuleThemeViewModel>("GetUserModuleThemes @UserId, @ModuleId, @SubjectId", UserId, ModuleId, SubjectId).ToList();
+            var themes = new StoredProcedure<SqlServer, CustomerModuleThemeViewModel>("GetUserParentThemes").ExecResult(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@ModuleId", moduleId),
+                new FunctionParameter("@SubjectId", subjectId)
+                );
 
             return themes;
         }

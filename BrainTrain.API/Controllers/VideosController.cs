@@ -13,7 +13,9 @@ namespace BrainTrain.API.Controllers
     [Authorize(Roles = "Контент-менеджер")]
     public class VideosController : BaseApiController
     {
-        private BrainTrainContext db;
+        public VideosController(BrainTrainContext _db) : base(_db)
+        {
+        }
 
         // GET: api/Videos
         [HttpGet]

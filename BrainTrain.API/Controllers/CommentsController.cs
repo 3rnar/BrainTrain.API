@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BrainTrain.API.Controllers
 {
-    [Authorize(Roles = "Контент-менеджер")]
+    [Authorize]
     public class CommentsController : BaseApiController
     {
         public CommentsController(BrainTrainContext _db) : base(_db)
@@ -20,6 +20,8 @@ namespace BrainTrain.API.Controllers
         [Route("api/Comments")]
         public IQueryable<Comment> GetComments()
         {
+            var usr = User;
+            var user = UserId;
             return db.Comments;
         }
 

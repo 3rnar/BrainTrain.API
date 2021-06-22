@@ -1,24 +1,26 @@
-﻿using BrainTrain.API.Helpers;
+﻿using BrainTrain.API.Dapper;
+using BrainTrain.API.Helpers;
 using BrainTrain.API.Helpers.Learnosity;
-using BrainTrain.API.Models;
 using BrainTrain.Core.Models;
-using Microsoft.AspNet.Identity;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Questions")]
+    [Route("api/Customer/Questions")]
     public class CustomerQuestionsController : BaseApiController
     {
+        public CustomerQuestionsController(BrainTrainContext _db) : base(_db)
+        {
+        }
+
         /// <summary>
         /// Один вопрос в формате лерносити по айди 
         /// </summary>
@@ -95,7 +97,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ThemeQuestionsSity")]
         public CustomerLearnosityModuleQuestionViewModel ThemeQuestionsLearnosity(int themeId, bool? isModuleQuestions)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var model = new CustomerLearnosityModuleQuestionViewModel();
 
             var qIds = new List<int>();
@@ -309,7 +311,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ThemeAllQuestions")]
         public IEnumerable<CustomerQuestionWithDifficultyAndCorrectnessViewModel> ThemeAllQuestions(int themeId, bool? takeLimited = null)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             var qs = db.Questions.Include(q => q.QuestionDifficulty).
                 Where(q => q.QuestionsToThemes.Any(qtt => qtt.ThemeId == themeId)
@@ -376,14 +378,13 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("PostQuestionAnswers")]
         public async Task<IActionResult> PostQuestionAnswersAsync(QuestionAnswer model, int answerSourceId, double experience)
         {
-            var userId = User.Identity.GetUserId();
             var dt = DateTime.Now;
 
 
             var qa = new QuestionAnswer
             {
                 QuestionId = model.QuestionId,
-                UserId = userId,
+                UserId = UserId,
                 Value = model.Value,
                 QuestionAnswerVariants = new List<QuestionAnswerVariant>(),
                 DateCreated = dt,
@@ -413,13 +414,14 @@ namespace BrainTrain.API.Controllers.CustomerControllers
             //    ur.Rating += experience;
             //}
 
-            CustomerLevelUpdateHandler.UpdateLevel(experience, userId);
+            new CustomerLevelUpdateHandler(db).UpdateLevel(experience, UserId);
 
             await db.SaveChangesAsync();
 
-            var UserId = new SqlParameter("@UserId", userId);
-            var Questions = new SqlParameter("@Questions", model.QuestionId.ToString());
-            db.Database.ExecuteSqlCommand("dbo.UpdateThemeOverallLearningRate @Questions, @UserId", Questions, UserId);
+            new StoredProcedure<SqlServer, object>("UpdateThemeOverallLearningRate").Exec(
+                new FunctionParameter("@UserId", UserId),
+                new FunctionParameter("@Questions", model.QuestionId.ToString())
+                );
 
             return Ok();
         }
@@ -443,7 +445,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ThemeQuestionsByDifficulty")]
         public IEnumerable<CustomerQuestionWithDifficultyViewModel> ThemeQuestionsByDifficulty(int themeId, int difficultyId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             var qs = db.Questions.Include(q => q.QuestionDifficulty).Where(q => !q.QuestionAnswers.Any(qa => qa.UserId == userId) && q.QuestionsToThemes.Any(qtt => qtt.ThemeId == themeId) && q.QuestionDifficultyId == difficultyId).Select(q => new CustomerQuestionWithDifficultyViewModel {
                 QuestionId = q.Id,
@@ -459,7 +461,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("SprintQuestions")]
         public IEnumerable<int> SprintQuestions(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var qs = db.Questions.Where(q => !q.QuestionAnswers.Any(qa => qa.UserId == userId) && q.QuestionsToThemes.Any(qtt => qtt.Theme.SubjectId == subjectId)).Select(q => q.Id).OrderBy(q => Guid.NewGuid()).Take(10).ToList();
 
             return qs;
@@ -469,7 +471,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("TrainingQuestions")]
         public IEnumerable<int> TrainingQuestions(int subjectId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId; 
 
             //old version
             //var UserId = new SqlParameter("@UserId", userId);
@@ -495,7 +497,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("ModuleControlWorkQuestions")]
         public IEnumerable<CustomerControlWorkQuestionViewModel> ModuleControlWorkQuestions(int controlWorkId)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var themeIds = new List<int>();
 
             var existingUserToCw = db.UsersToControlWorks.

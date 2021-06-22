@@ -1,22 +1,26 @@
 ﻿using BrainTrain.Core.Models;
+using BrainTrain.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Web.Http;
-using BrainTrain.API.Models;
-using Microsoft.AspNet.Identity;
-using System.Threading.Tasks;
-using System.Web;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace BrainTrain.API.Controllers.CustomerControllers
 {
     [Authorize(Roles = "Обычный пользователь")]
-    [RoutePrefix("api/Customer/Stuff")]
+    [Route("api/Customer/Stuff")]
     public class CustomerStuffController : BaseApiController
     {
+        private readonly IWebHostEnvironment _environment;
+        public CustomerStuffController(BrainTrainContext _db, IWebHostEnvironment environment) : base(_db)
+        {
+            _environment = environment;
+        }
+
         [HttpGet]
         [Route("News")]
         public IEnumerable<News> GetNews()
@@ -80,41 +84,42 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("AddComment")]
         public async Task<IActionResult> PostNewComment(CommentViewModel model)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             var comment = new Comment { Text = model.Text, NewsId = model.NewsId, UserId = userId, DateCreated = DateTime.Now };
             if (model.ReplyingCommentId != null)
             {
                 comment.ReplyingCommentId = model.ReplyingCommentId;
             }
 
-            if (Request.Content.IsMimeMultipartContent())
+            //if (Request.Content.IsMimeMultipartContent())
+            //{
+            var uploadFiles = new List<UploadFile>();
+
+            foreach (var file in Request.Form.Files)
             {
-                var uploadFiles = new List<UploadFile>();
-                var httpRequest = HttpContext.Current.Request;
+                var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
 
-                foreach (string file in httpRequest.Files)
+                var filePath = Path.Combine(_environment.WebRootPath, "~/App_Data/uploads/") + fileNameInFileSystem;
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    var postedFile = httpRequest.Files[file];
-                    var fileNameInFileSystem = Guid.NewGuid().ToString() + Path.GetExtension(postedFile.FileName);
-
-                    var filePath = HttpContext.Current.Server.MapPath("~/App_Data/uploads/" + fileNameInFileSystem);
-                    postedFile.SaveAs(filePath);
-
-                    var uploadFile = new UploadFile
-                    {
-                        BlobUrl = "~/App_Data/uploads/" + fileNameInFileSystem,
-                        DateCreated = DateTime.Now,
-                        FileName = postedFile.FileName
-                    };
-                    uploadFiles.Add(uploadFile);
+                    await file.CopyToAsync(stream);
                 }
 
-                db.UploadFiles.AddRange(uploadFiles);
-                await db.SaveChangesAsync();
-
-                if (uploadFiles.Count > 0)
-                    comment.ImageUrl = "/api/UploadFiles/" + uploadFiles[0].Id;
+                var uploadFile = new UploadFile
+                {
+                    BlobUrl = "~/App_Data/uploads/" + fileNameInFileSystem,
+                    DateCreated = DateTime.Now,
+                    FileName = file.FileName
+                };
+                uploadFiles.Add(uploadFile);
             }
+
+            db.UploadFiles.AddRange(uploadFiles);
+            await db.SaveChangesAsync();
+
+            if (uploadFiles.Count > 0)
+                comment.ImageUrl = "/api/UploadFiles/" + uploadFiles[0].Id;
+            //}
 
             db.Comments.Add(comment);
             await db.SaveChangesAsync();
@@ -133,7 +138,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("PostCompliant")]
         public IActionResult PostCompliant(QuestionCompaint model)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
 
             if (model != null)
             {
@@ -149,7 +154,7 @@ namespace BrainTrain.API.Controllers.CustomerControllers
         [Route("LikeSource")]
         public IActionResult LikeSource(SourceUsefullnessViewModel model)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = UserId;
             SourceUsefullness sourceUsefullness = new SourceUsefullness {
                 UserId = userId,
                 IsLike = model.IsLike,
