@@ -33,7 +33,6 @@ namespace BrainTrain.Core.Models
         public string KaznituPassword { get; set; }
         [ForeignKey("Level")]
         public int? LevelId { get; set; }
-
         public virtual ICollection<UsersToGoals> UsersToGoals { get; set; }
         public virtual ICollection<UsersToLearningPlaces> UsersToLearningPlaces { get; set; }
         public virtual ICollection<UsersToMaterials> UsersToMaterials { get; set; }

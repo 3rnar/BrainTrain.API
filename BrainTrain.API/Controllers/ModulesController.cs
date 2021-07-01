@@ -143,7 +143,7 @@ namespace BrainTrain.API.Controllers
         // POST: api/Modules
         [HttpPost]
         [Route("api/Modules", Name = "PostModule")]
-        public async Task<IActionResult> PostModule(Module module)
+        public async Task<IActionResult> PostModule([FromBody] Module module)
         {
             if (!ModelState.IsValid)
             {
